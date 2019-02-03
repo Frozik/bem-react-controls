@@ -1,0 +1,39 @@
+import React, { FunctionComponent } from "react";
+import { cn } from "@bem-react/classname";
+import { IClassNameProps, Enhance, compose } from "@bem-react/core";
+
+// 1st
+const cnStar = cn("rating-dynamic", "star");
+
+export interface IStarProps extends IClassNameProps {
+    // it has a handler
+    onClick: () => void;
+
+    // it may have modifiers
+    mods?: Record<string, string>;
+}
+
+const StarBase: FunctionComponent<IStarProps> = ({ mods, className, onClick, children }) => (
+    <div className={cnStar(mods, [className])} onClick={onClick}>
+        {children}
+    </div>
+);
+
+// 2nd
+
+// it's all about value and handler
+export interface IClickableProps {
+    // it has a value from 1 to 5
+    value: number;
+
+    // it has a handler
+    onClick: (value: number) => void;
+}
+
+const Clickable: Enhance<IClickableProps extends IClassNameProps> = (Base) => (props) => (
+    <Base {...props} onClick={() => props.onClick(props.value)}>
+        {props.children}
+    </Base>
+);
+
+export const Star = compose(Clickable)(StarBase);
