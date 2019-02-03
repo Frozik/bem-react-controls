@@ -1,5 +1,7 @@
 import React, { Component, ComponentType } from "react";
-import { AnyAction, Dispatch, Reducer } from "redux";
+import { applyMiddleware, createStore, Dispatch, Reducer, Store, Unsubscribe } from "redux";
+import logger from "redux-logger";
+import thunk from "redux-thunk";
 
 import { ClassNameFormatter } from "@bem-react/classname";
 import { compose, Enhance, IClassNameProps, withBemMod, Wrapper } from "@bem-react/core";
@@ -19,40 +21,34 @@ export function buildStatefulComponent<T extends IClassNameProps>(
     componentReducer: Reducer,
 ) {
     const dispatchable:Enhance<IOptionalDispatchProps> = (NestedWrappedComponent) => (
-        class extends Component<IOptionalDispatchProps> {
+        class extends Component<IOptionalDispatchProps, Store> {
             constructor(props: IOptionalDispatchProps) {
                 super(props);
 
-                this.state = componentReducer(undefined, { type: "[component] DUMMY_ACTION" });
+                this.state = createStore(
+                    componentReducer,
+                    undefined,
+                    applyMiddleware(thunk, logger)
+                );
             }
 
-            dispatch: Dispatch = <T extends AnyAction>(action: T) => {
-                this.setState((originalState) => {
-                    const previousState = originalState || undefined;
+            unsubscribeStoreChanges: Unsubscribe | undefined;
 
-                    console.groupCollapsed("STATE CHANGED");
+            componentDidMount() {
+                if (this.state) {
+                    this.unsubscribeStoreChanges = this.state.subscribe(this.forceUpdate.bind(this));
+                }
+            }
 
-                    console.group("PREVIOUS STATE");
-                    console.log(previousState);
-                    console.groupEnd();
-
-                    const nextState = componentReducer(previousState, action);
-
-                    console.group("NEXT STATE");
-                    console.log(nextState);
-                    console.groupEnd();
-
-                    console.groupEnd();
-
-                    return nextState;
-                });
-
-                return action;
+            componentWillUnmount() {
+                if (this.unsubscribeStoreChanges) {
+                    this.unsubscribeStoreChanges();
+                }
             }
 
             render() {
                 return (
-                    <NestedWrappedComponent {...this.state} {...this.props} dispatch={this.dispatch} />
+                    <NestedWrappedComponent {...this.state.getState()} {...this.props} dispatch={this.state.dispatch} />
                 );
             }
         }

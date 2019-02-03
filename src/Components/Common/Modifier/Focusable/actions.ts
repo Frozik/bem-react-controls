@@ -1,4 +1,4 @@
-import { createAction, ActionsUnion } from "./../../action.helper";
+import { ActionsUnion, createAction } from "../../action.helper";
 
 export enum ActionTypes {
     FOCUS_CHANGED = "[modifier] FOCUS_CHANGED",
