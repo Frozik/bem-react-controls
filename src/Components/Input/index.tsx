@@ -22,3 +22,9 @@ export const InputComponent = buildStatefulComponent(
         focused,
     })
 );
+
+// todo:
+// 1) Add combineCidReducers which accepts reducers with CID
+// 2) Add 2 sets of component reducers - with and without CID
+// 3) In case we have CID in component.translator - modify action and add CID
+// 4) Don't allow not plain object action for global dispatch (stick to several middlewares and process them on our side)
