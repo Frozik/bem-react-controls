@@ -1,5 +1,5 @@
 import React, { Component, ComponentType } from "react";
-import { applyMiddleware, createStore, Dispatch, Reducer, Store, Unsubscribe } from "redux";
+import { applyMiddleware, createStore, Dispatch, Reducer, Store, Unsubscribe, Middleware } from "redux";
 import logger from "redux-logger";
 import thunk from "redux-thunk";
 
@@ -25,10 +25,15 @@ export function buildStatefulComponent<T extends IClassNameProps>(
             constructor(props: IOptionalDispatchProps) {
                 super(props);
 
+                const middlewares:Middleware[] = [thunk];
+
+                if (process.env.NODE_ENV !== "production") {
+                    middlewares.push(logger);
+                }
+
                 this.state = createStore(
                     componentReducer,
-                    undefined,
-                    applyMiddleware(thunk, logger)
+                    applyMiddleware(...middlewares)
                 );
             }
 
