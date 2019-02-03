@@ -45,6 +45,10 @@ export function buildStatefulComponent<T extends IClassNameProps>(
                 }
             }
 
+            shouldComponentUpdate() {
+                return !this.state;
+            }
+
             componentWillUnmount() {
                 if (this.unsubscribeStoreChanges) {
                     this.unsubscribeStoreChanges();
@@ -53,7 +57,7 @@ export function buildStatefulComponent<T extends IClassNameProps>(
 
             render() {
                 return (
-                    <NestedWrappedComponent {...this.state.getState()} {...this.props} dispatch={this.state.dispatch} />
+                    <NestedWrappedComponent {...(this.state ? this.state.getState() : this.props)} dispatch={this.state.dispatch} />
                 );
             }
         }
