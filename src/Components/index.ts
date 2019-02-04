@@ -1,1 +1,1 @@
-export { InputComponent as Input } from "./Input/index";
+export * from "./Input";

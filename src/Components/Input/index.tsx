@@ -14,7 +14,7 @@ const InputStatelessComponent = compose(
 
 // todo: Adds combineReducers with CID + export component reducer + it's type
 
-export const InputComponent = buildStatefulComponent(
+export const Input = buildStatefulComponent(
     cnInput,
     InputStatelessComponent,
     combineReducers({

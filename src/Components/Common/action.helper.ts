@@ -12,7 +12,7 @@ export function createAction<T extends string, P>(type: T, payload?: P) {
     return payload === undefined ? { type } : { type, payload };
 }
 
-type FunctionType = (...agrs:any[]) => any;
-type ActionCreatorsMapObject = { [actioncreator: string]: FunctionType };
+type FunctionType = (...agrs: any[]) => any;
+type ActionCreatorsMapObject = { [actionCreator: string]: FunctionType };
 
 export type ActionsUnion<A extends ActionCreatorsMapObject> = ReturnType<A[keyof A]>;
