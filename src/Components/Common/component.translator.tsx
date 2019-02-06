@@ -1,36 +1,59 @@
 import React, { ComponentType, PureComponent } from "react";
-import { applyMiddleware, createStore, Dispatch, Reducer, Store, Unsubscribe, Middleware } from "redux";
+import { ReactReduxContext, ReactReduxContextValue } from "react-redux";
+import {
+    applyMiddleware, compose as reduxCompose, createStore, Dispatch, Middleware, Reducer, Store,
+    Unsubscribe
+} from "redux";
 import logger from "redux-logger";
 import thunk from "redux-thunk";
 
 import { ClassNameFormatter } from "@bem-react/classname";
 import { compose, Enhance, IClassNameProps, withBemMod } from "@bem-react/core";
 
-interface IDispatchProps extends IClassNameProps {
-    dispatch: Dispatch;
-}
-
-export interface IOptionalDispatchProps extends Partial<IDispatchProps> {
-}
-
-export interface IComponentProps extends IOptionalDispatchProps {
+export interface IComponentProps extends IClassNameProps {
     cid?: string;
+    useGlobalStore?: boolean;
 }
 
-// todo: Add possibility to take external dispatch, CID
-
-function buildStore(componentReducer: Reducer): Store {
+function getMiddleWares(useStoreLogging?: boolean): Middleware[] {
     const middlewares: Middleware[] = [thunk];
 
-    if (process.env.NODE_ENV !== "production") {
+    if (!useStoreLogging && process.env.NODE_ENV !== "production") {
         middlewares.push(logger);
     }
 
+    return middlewares;
+}
+
+function buildStore(componentReducer: Reducer): Store {
     return createStore(
         componentReducer,
-        applyMiddleware(...middlewares),
+        applyMiddleware(...getMiddleWares()),
     );
 }
+
+function configureDispatch({ store }: ReactReduxContextValue): Dispatch {
+    const middlewares = getMiddleWares(true);
+
+    let dispatchGuard = () => {
+        throw new Error(
+          `Dispatching while constructing your middleware is not allowed. ` +
+            `Other middleware would not be applied to this dispatch.`
+        );
+    };
+
+    const middlewareAPI = {
+        getState: store.getState,
+        dispatch: () => dispatchGuard(),
+    };
+
+    const chain = middlewares.map(middleware => middleware(middlewareAPI));
+
+    return reduxCompose(...chain)(store.dispatch) as Dispatch;
+}
+
+// todo: Add possibility to take CID
+// todo: when props changes we must dispatch to store if we has local store
 
 export function buildStatefulComponent<T extends IClassNameProps>(
     cn: ClassNameFormatter,
@@ -42,10 +65,28 @@ export function buildStatefulComponent<T extends IClassNameProps>(
             constructor(props: IComponentProps) {
                 super(props);
 
-                this.state = buildStore(componentReducer);
+                if (!props.useGlobalStore) {
+                    this.state = buildStore(componentReducer);
+                }
             }
 
-            unsubscribeStoreChanges: Unsubscribe | undefined;
+            static contextType = ReactReduxContext;
+            private unsubscribeStoreChanges: Unsubscribe | undefined;
+            private dispatch: Dispatch | undefined;
+
+            componentWillMount() {
+                if (this.state) {
+                    this.dispatch = this.state.dispatch;
+
+                    return;
+                }
+
+                if (!this.context) {
+                    throw new Error("Redux Store is not provided");
+                }
+
+                this.dispatch = configureDispatch(this.context as ReactReduxContextValue);
+            }
 
             componentDidMount() {
                 if (this.state) {
@@ -60,11 +101,10 @@ export function buildStatefulComponent<T extends IClassNameProps>(
             }
 
             render() {
-                const { cid, ...childProps } = this.state ? this.state.getState() : this.props;
-                const dispatch = this.state ? this.state.dispatch : () => { throw new Error("Dispatch is not implemented"); };
+                const { cid, useGlobalStore, ...props} = this.state ? this.state.getState() : this.props;
 
                 return (
-                    <NestedWrappedComponent {...childProps} dispatch={dispatch} />
+                    <NestedWrappedComponent {...props} dispatch={this.dispatch} />
                 );
             }
         }

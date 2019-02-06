@@ -6,6 +6,8 @@ import { Enhance, IClassNameProps, withBemMod } from "@bem-react/core";
 
 import { Actions } from "./actions";
 
+export * from "./actions";
+
 export interface IFocusableProps extends IClassNameProps {
     focused?: boolean;
     onFocusChanged?: (hasFocus: boolean) => void;

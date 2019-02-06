@@ -3,7 +3,6 @@ import React, { FunctionComponent, SyntheticEvent } from "react";
 import { cn } from "@bem-react/classname";
 import { IClassNameProps } from "@bem-react/core";
 
-import { IOptionalDispatchProps } from "../Common/component.translator";
 import { Actions } from "./actions";
 
 export interface IInputProps extends IClassNameProps {
@@ -29,7 +28,7 @@ function onChangeHandler(
 
 export const cnInput = cn("Input");
 
-export const Input: FunctionComponent<IInputProps & IOptionalDispatchProps> = ({ dispatch, className, onChange, ...props }) => (
+export const Input: FunctionComponent<IInputProps> = ({ dispatch, className, onChange, ...props }:  any) => (
     <input
         {...props}
         onChange={(eventArgs: SyntheticEvent) => onChangeHandler(eventArgs, { dispatch, ...props }, onChange)}
