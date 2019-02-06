@@ -35,10 +35,14 @@ function buildStore(componentReducer: Reducer): Store {
 function configureDispatch({ store }: ReactReduxContextValue): Dispatch {
     const middlewares = getMiddleWares(true);
 
+    if (!middlewares.length) {
+        return store.dispatch;
+    }
+
     let dispatchGuard = () => {
         throw new Error(
-          `Dispatching while constructing your middleware is not allowed. ` +
-            `Other middleware would not be applied to this dispatch.`
+            `Dispatching while constructing your middleware is not allowed. ` +
+                `Other middleware would not be applied to this dispatch.`
         );
     };
 
@@ -82,7 +86,10 @@ export function buildStatefulComponent<T extends IClassNameProps>(
                 }
 
                 if (!this.context) {
-                    throw new Error("Redux Store is not provided");
+                    throw new Error(
+                        `Could not find "store" in the context of ` +
+                            `"${cn()}". Wrap the root component in a <Provider>.`
+                    );
                 }
 
                 this.dispatch = configureDispatch(this.context as ReactReduxContextValue);
