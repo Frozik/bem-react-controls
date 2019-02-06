@@ -1,3 +1,4 @@
+import memoize from "memoize-one";
 import React, { ComponentType, PureComponent } from "react";
 import { ReactReduxContext, ReactReduxContextValue } from "react-redux";
 import {
@@ -56,15 +57,22 @@ function configureDispatch({ store }: ReactReduxContextValue): Dispatch {
     return reduxCompose(...chain)(store.dispatch) as Dispatch;
 }
 
-// todo: Add possibility to take CID
-// todo: when props changes we must dispatch to store if we has local store
-
 export function buildStatefulComponent<T extends IClassNameProps>(
     cn: ClassNameFormatter,
     WrappedComponent: ComponentType<T>,
     componentReducer: Reducer,
 ) {
-    const dispatchable:Enhance<IComponentProps> = (NestedWrappedComponent) => (
+    const memoizedDestructuredProps = memoize((props: { [key: string]: any }) => {
+        const { cid, useGlobalStore, ...rest } = props;
+
+        return { cid, useGlobalStore, props: rest };
+    });
+
+    const mergedNestedProps = memoize(
+        (props: { [key: string]: any }, state: { [key: string]: any } | undefined) => ({ ...state, ...props })
+    );
+
+    const dispatchable:Enhance<IComponentProps> = (NestedWrappedComponent: ComponentType<{ [key: string]: any }>) => (
         class extends PureComponent<IComponentProps, Store> {
             constructor(props: IComponentProps) {
                 super(props);
@@ -108,10 +116,14 @@ export function buildStatefulComponent<T extends IClassNameProps>(
             }
 
             render() {
-                const { cid, useGlobalStore, ...props} = this.state ? this.state.getState() : this.props;
+                const { props } = memoizedDestructuredProps(this.props);
+                const nestedProps = mergedNestedProps(
+                    props,
+                    this.state ? this.state.getState() : undefined
+                );
 
                 return (
-                    <NestedWrappedComponent {...props} dispatch={this.dispatch} />
+                    <NestedWrappedComponent {...nestedProps} dispatch={this.dispatch} />
                 );
             }
         }

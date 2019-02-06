@@ -1,7 +1,5 @@
 import { Action } from "redux";
 
-// todo: Create custom action with CID
-
 export interface IActionWithPayload<T, P> extends Action<T> {
     payload: P;
 }

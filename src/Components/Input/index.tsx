@@ -33,9 +33,3 @@ export const Input = buildStatefulComponent(
     InputStatelessComponent,
     inputReducer,
 );
-
-// todo:
-// 1) Add combineCidReducers which accepts reducers with CID
-// 2) Add 2 sets of component reducers - with and without CID
-// 3) In case we have CID in component.translator - modify action and add CID
-
