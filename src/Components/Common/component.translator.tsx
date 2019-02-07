@@ -1,70 +1,16 @@
-import memoize from "memoize-one";
 import React, { ComponentType, PureComponent } from "react";
 import { ReactReduxContext, ReactReduxContextValue } from "react-redux";
 import { Action, AnyAction, Dispatch, Reducer, Store, Unsubscribe } from "redux";
 
-import { ClassNameFormatter } from "@bem-react/classname";
 import { compose, IClassNameProps, Wrapper } from "@bem-react/core";
 
 import { Actions } from "./actions";
 import { buildReducer } from "./reducer";
 import { buildStore, configureDispatch } from "./configuration";
 import { IAnyProps, IDispatchProps } from "./types";
-
-function getStateDiff(state: IAnyProps, props: IAnyProps): IAnyProps | undefined {
-    return Object.keys(props).reduce(
-        (accumulator: IAnyProps | undefined, key) => {
-            const newValue = props[key];
-
-            if (state[key] === newValue) {
-                return accumulator;
-            }
-
-            if (!accumulator) {
-                return { [key]: newValue };
-            }
-
-            accumulator[key] = newValue;
-
-            return accumulator;
-        },
-        undefined
-    );
-}
-
-const getMemoizeProps = memoize((props: IAnyProps, stateKeys: string[] = []) => ({
-    events: Object.keys(props).reduce(
-        (accumulator: IAnyProps, key) => {
-            if (stateKeys.indexOf(key) >= 0 || !props.hasOwnProperty(key)) {
-                return accumulator;
-            }
-
-            accumulator[key] = props[key];
-
-            return accumulator;
-        },
-        {}
-    ),
-    state: stateKeys.reduce(
-        (accumulator: IAnyProps, key) => {
-            if (!props.hasOwnProperty(key)) {
-                return accumulator;
-            }
-
-            if (!accumulator) {
-                return { [key]: props[key] };
-            }
-
-            accumulator[key] = props[key];
-
-            return accumulator;
-        },
-        {}
-    ),
-}));
+import { getDisplayName, getMemoizeProps, getStateDiff } from "./helpers";
 
 export function buildStatefulComponent<T extends IClassNameProps>(
-    cn: ClassNameFormatter,
     WrappedComponent: ComponentType<T>,
     componentReducer: Reducer,
 ) {
@@ -130,7 +76,9 @@ export function buildStatefulComponent<T extends IClassNameProps>(
             componentDidMount() {
                 if (!this.context) {
                     throw new Error(
-                        `Could not find "store" in the context of "${cn()}". Wrap the root component in a <Provider>.`
+                        `Could not find "store" in the context of "${
+                            getDisplayName(NestedWrappedComponent)
+                        }". Wrap the root component in a <Provider>.`
                     );
                 }
 
