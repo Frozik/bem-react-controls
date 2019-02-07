@@ -1,3 +1,4 @@
+import memoize from "memoize-one";
 import React, { ComponentType, PureComponent } from "react";
 import { ReactReduxContext, ReactReduxContextValue } from "react-redux";
 import {
@@ -43,26 +44,14 @@ function buildStore(componentReducer: Reducer): Store {
     );
 }
 
-function getStateDiff(
-    previousProps?: { [key: string]: any },
-    props?: { [key: string]: any },
-    watchKeys?: string[],
-): { [key: string]: any } | undefined {
+function getStateDiff(state: IAnyProps, props: IAnyProps): IAnyProps | undefined {
     let diff = undefined;
 
-    if (!props || !watchKeys || !watchKeys.length) {
-        return diff;
-    }
-
-    return watchKeys.reduce(
-        (accumulator: { [key: string]: any } | undefined, key) => {
-            if (!props.hasOwnProperty(key)) {
-                return accumulator;
-            }
-
+    return Object.keys(props).reduce(
+        (accumulator: IAnyProps | undefined, key) => {
             const newValue = props[key];
 
-            if (previousProps && previousProps[key] === newValue) {
+            if (state[key] === newValue) {
                 return accumulator;
             }
 
@@ -107,6 +96,37 @@ export function buildStatefulComponent<T extends IClassNameProps>(
     WrappedComponent: ComponentType<T>,
     componentReducer: Reducer,
 ) {
+    const getProps = memoize((props: IAnyProps, stateKeys: string[] = []) => ({
+        events: Object.keys(props).reduce(
+            (accumulator: IAnyProps, key) => {
+                if (stateKeys.indexOf(key) >= 0 || !props.hasOwnProperty(key)) {
+                    return accumulator;
+                }
+
+                accumulator[key] = props[key];
+
+                return accumulator;
+            },
+            {}
+        ),
+        state: stateKeys.reduce(
+            (accumulator: IAnyProps, key) => {
+                if (!props.hasOwnProperty(key)) {
+                    return accumulator;
+                }
+
+                if (!accumulator) {
+                    return { [key]: props[key] };
+                }
+
+                accumulator[key] = props[key];
+
+                return accumulator;
+            },
+            {}
+        ),
+    }));
+
     const internalStorageEnhancer: Wrapper<IDispatchProps> = ((NestedWrappedComponent: ComponentType<IAnyProps>) => (
         class extends PureComponent<IDispatchProps, Store> {
             constructor(props: IDispatchProps) {
@@ -124,8 +144,10 @@ export function buildStatefulComponent<T extends IClassNameProps>(
                 this.unsubscribeStoreChanges = this.state.subscribe(this.forceUpdate.bind(this));
             }
 
-            componentDidUpdate(previousProps: IDispatchProps) {
-                const stateDiff = getStateDiff(previousProps, this.props, this.watchKeys);
+            componentDidUpdate() {
+                const { state } = getProps(this.props, this.watchKeys);
+
+                const stateDiff = getStateDiff(this.state.getState(), state);
 
                 if (stateDiff) {
                     this.state.dispatch(Actions.merge(stateDiff));
@@ -139,8 +161,10 @@ export function buildStatefulComponent<T extends IClassNameProps>(
             }
 
             render() {
+                const { events } = getProps(this.props, this.watchKeys);
+
                 return (
-                    <NestedWrappedComponent {...this.state.getState()} dispatch={this.state.dispatch} />
+                    <NestedWrappedComponent {...events} {...this.state.getState()} dispatch={this.state.dispatch} />
                 );
             }
         }
