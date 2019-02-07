@@ -5,7 +5,7 @@ export enum ActionTypes {
 }
 
 export const Actions = {
-    changeValue: (value: string) => createAction(ActionTypes.VALUE_CHANGED, value)
+    changeValue: (value: string) => createAction(ActionTypes.VALUE_CHANGED, value),
 };
 
 export type Actions = ActionsUnion<typeof Actions>;

@@ -1,19 +1,29 @@
-import memoize from "memoize-one";
 import React, { ComponentType, PureComponent } from "react";
 import { ReactReduxContext, ReactReduxContextValue } from "react-redux";
 import {
-    applyMiddleware, compose as reduxCompose, createStore, Dispatch, Middleware, Reducer, Store,
-    Unsubscribe
+    Action, AnyAction, applyMiddleware, compose as reduxCompose, createStore, Dispatch, Middleware,
+    Reducer, Store, Unsubscribe
 } from "redux";
 import logger from "redux-logger";
 import thunk from "redux-thunk";
 
 import { ClassNameFormatter } from "@bem-react/classname";
-import { compose, Enhance, IClassNameProps, withBemMod } from "@bem-react/core";
+import { compose, IClassNameProps, Wrapper } from "@bem-react/core";
+
+import { Actions } from "./actions";
+import { buildReducer } from "./reducer";
 
 export interface IComponentProps extends IClassNameProps {
-    cid?: string;
+}
+
+export interface IDispatchProps extends IComponentProps {
     useGlobalStore?: boolean;
+    cid?: string;
+    dispatch?: Dispatch;
+}
+
+export interface IAnyProps {
+    [key: string]: any;
 }
 
 function getMiddleWares(useStoreLogging?: boolean): Middleware[] {
@@ -33,11 +43,46 @@ function buildStore(componentReducer: Reducer): Store {
     );
 }
 
-function configureDispatch({ store }: ReactReduxContextValue): Dispatch {
+function getStateDiff(
+    previousProps?: { [key: string]: any },
+    props?: { [key: string]: any },
+    watchKeys?: string[],
+): { [key: string]: any } | undefined {
+    let diff = undefined;
+
+    if (!props || !watchKeys || !watchKeys.length) {
+        return diff;
+    }
+
+    return watchKeys.reduce(
+        (accumulator: { [key: string]: any } | undefined, key) => {
+            if (!props.hasOwnProperty(key)) {
+                return accumulator;
+            }
+
+            const newValue = props[key];
+
+            if (previousProps && previousProps[key] === newValue) {
+                return accumulator;
+            }
+
+            if (!accumulator) {
+                return { [key]: newValue };
+            }
+
+            accumulator[key] = newValue;
+
+            return accumulator;
+        },
+        undefined
+    );
+}
+
+function configureDispatch({ store }: ReactReduxContextValue, propsDispatch?: Dispatch): Dispatch {
     const middlewares = getMiddleWares(true);
 
     if (!middlewares.length) {
-        return store.dispatch;
+        return propsDispatch || store.dispatch;
     }
 
     let dispatchGuard = () => {
@@ -54,7 +99,7 @@ function configureDispatch({ store }: ReactReduxContextValue): Dispatch {
 
     const chain = middlewares.map(middleware => middleware(middlewareAPI));
 
-    return reduxCompose(...chain)(store.dispatch) as Dispatch;
+    return reduxCompose(...chain)(propsDispatch || store.dispatch) as Dispatch;
 }
 
 export function buildStatefulComponent<T extends IClassNameProps>(
@@ -62,50 +107,28 @@ export function buildStatefulComponent<T extends IClassNameProps>(
     WrappedComponent: ComponentType<T>,
     componentReducer: Reducer,
 ) {
-    const memoizedDestructuredProps = memoize((props: { [key: string]: any }) => {
-        const { cid, useGlobalStore, ...rest } = props;
-
-        return { cid, useGlobalStore, props: rest };
-    });
-
-    const mergedNestedProps = memoize(
-        (props: { [key: string]: any }, state: { [key: string]: any } | undefined) => ({ ...state, ...props })
-    );
-
-    const dispatchable:Enhance<IComponentProps> = (NestedWrappedComponent: ComponentType<{ [key: string]: any }>) => (
-        class extends PureComponent<IComponentProps, Store> {
-            constructor(props: IComponentProps) {
+    const internalStorageEnhancer: Wrapper<IDispatchProps> = ((NestedWrappedComponent: ComponentType<IAnyProps>) => (
+        class extends PureComponent<IDispatchProps, Store> {
+            constructor(props: IDispatchProps) {
                 super(props);
 
-                if (!props.useGlobalStore) {
-                    this.state = buildStore(componentReducer);
-                }
+                this.state = buildStore(buildReducer(componentReducer));
             }
 
-            static contextType = ReactReduxContext;
+            private watchKeys?: string[];
             private unsubscribeStoreChanges: Unsubscribe | undefined;
-            private dispatch: Dispatch | undefined;
-
-            componentWillMount() {
-                if (this.state) {
-                    this.dispatch = this.state.dispatch;
-
-                    return;
-                }
-
-                if (!this.context) {
-                    throw new Error(
-                        `Could not find "store" in the context of ` +
-                            `"${cn()}". Wrap the root component in a <Provider>.`
-                    );
-                }
-
-                this.dispatch = configureDispatch(this.context as ReactReduxContextValue);
-            }
 
             componentDidMount() {
-                if (this.state) {
-                    this.unsubscribeStoreChanges = this.state.subscribe(this.forceUpdate.bind(this));
+                this.watchKeys = Object.keys(this.state.getState());
+
+                this.unsubscribeStoreChanges = this.state.subscribe(this.forceUpdate.bind(this));
+            }
+
+            componentDidUpdate(previousProps: IDispatchProps) {
+                const stateDiff = getStateDiff(previousProps, this.props, this.watchKeys);
+
+                if (stateDiff) {
+                    this.state.dispatch(Actions.merge(stateDiff));
                 }
             }
 
@@ -116,20 +139,67 @@ export function buildStatefulComponent<T extends IClassNameProps>(
             }
 
             render() {
-                const { props } = memoizedDestructuredProps(this.props);
-                const nestedProps = mergedNestedProps(
-                    props,
-                    this.state ? this.state.getState() : undefined
+                return (
+                    <NestedWrappedComponent {...this.state.getState()} dispatch={this.state.dispatch} />
                 );
+            }
+        }
+    ));
+
+    const externalStorageEnhancer: Wrapper<IDispatchProps> = (NestedWrappedComponent: ComponentType<IAnyProps>) => (
+        class extends PureComponent<IDispatchProps, { dispatch: Dispatch }> {
+            constructor(props: IDispatchProps) {
+                super(props);
+
+                this.state = { dispatch: <T extends Action = AnyAction>(action: T) => action };
+            }
+
+            static contextType = ReactReduxContext;
+
+            componentDidMount() {
+                if (!this.context) {
+                    throw new Error(
+                        `Could not find "store" in the context of "${cn()}". Wrap the root component in a <Provider>.`
+                    );
+                }
+
+                this.setState({
+                    dispatch: configureDispatch(this.context as ReactReduxContextValue, this.props.dispatch),
+                });
+            }
+
+            render() {
+                const { dispatch } = this.state;
+                const { cid, useGlobalStore, ...props } = this.props;
 
                 return (
-                    <NestedWrappedComponent {...nestedProps} dispatch={this.dispatch} />
+                    <NestedWrappedComponent {...props} dispatch={dispatch} />
                 );
             }
         }
     );
 
-    const dispatchableModifier = withBemMod<IComponentProps>(cn(), {}, dispatchable);
+    const baseComponentSelector: Wrapper<IDispatchProps> = (NestedWrappedComponent: ComponentType) => (
+        class extends PureComponent<IDispatchProps> {
+            constructor(props: IDispatchProps) {
+                super(props);
 
-    return compose(dispatchableModifier)(WrappedComponent);
+                const { useGlobalStore = false } = props;
+
+                this.baseComponent = useGlobalStore
+                    ? externalStorageEnhancer(NestedWrappedComponent)
+                    : internalStorageEnhancer(NestedWrappedComponent);
+            }
+
+            private readonly baseComponent: ComponentType<IDispatchProps>;
+
+            render() {
+                return (
+                    <this.baseComponent {...this.props} />
+                );
+            }
+        }
+    );
+
+    return compose(baseComponentSelector)(WrappedComponent);
 }
