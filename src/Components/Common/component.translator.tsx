@@ -1,52 +1,17 @@
 import memoize from "memoize-one";
 import React, { ComponentType, PureComponent } from "react";
 import { ReactReduxContext, ReactReduxContextValue } from "react-redux";
-import {
-    Action, AnyAction, applyMiddleware, compose as reduxCompose, createStore, Dispatch, Middleware,
-    Reducer, Store, Unsubscribe
-} from "redux";
-import logger from "redux-logger";
-import thunk from "redux-thunk";
+import { Action, AnyAction, Dispatch, Reducer, Store, Unsubscribe } from "redux";
 
 import { ClassNameFormatter } from "@bem-react/classname";
 import { compose, IClassNameProps, Wrapper } from "@bem-react/core";
 
 import { Actions } from "./actions";
 import { buildReducer } from "./reducer";
-
-export interface IComponentProps extends IClassNameProps {
-}
-
-export interface IDispatchProps extends IComponentProps {
-    useGlobalStore?: boolean;
-    cid?: string;
-    dispatch?: Dispatch;
-}
-
-export interface IAnyProps {
-    [key: string]: any;
-}
-
-function getMiddleWares(useStoreLogging?: boolean): Middleware[] {
-    const middlewares: Middleware[] = [thunk];
-
-    if (!useStoreLogging && process.env.NODE_ENV !== "production") {
-        middlewares.push(logger);
-    }
-
-    return middlewares;
-}
-
-function buildStore(componentReducer: Reducer): Store {
-    return createStore(
-        componentReducer,
-        applyMiddleware(...getMiddleWares()),
-    );
-}
+import { buildStore, configureDispatch } from "./configuration";
+import { IAnyProps, IDispatchProps } from "./types";
 
 function getStateDiff(state: IAnyProps, props: IAnyProps): IAnyProps | undefined {
-    let diff = undefined;
-
     return Object.keys(props).reduce(
         (accumulator: IAnyProps | undefined, key) => {
             const newValue = props[key];
@@ -67,66 +32,42 @@ function getStateDiff(state: IAnyProps, props: IAnyProps): IAnyProps | undefined
     );
 }
 
-function configureDispatch({ store }: ReactReduxContextValue, propsDispatch?: Dispatch): Dispatch {
-    const middlewares = getMiddleWares(true);
+const getMemoizeProps = memoize((props: IAnyProps, stateKeys: string[] = []) => ({
+    events: Object.keys(props).reduce(
+        (accumulator: IAnyProps, key) => {
+            if (stateKeys.indexOf(key) >= 0 || !props.hasOwnProperty(key)) {
+                return accumulator;
+            }
 
-    if (!middlewares.length) {
-        return propsDispatch || store.dispatch;
-    }
+            accumulator[key] = props[key];
 
-    let dispatchGuard = () => {
-        throw new Error(
-            `Dispatching while constructing your middleware is not allowed. ` +
-                `Other middleware would not be applied to this dispatch.`
-        );
-    };
+            return accumulator;
+        },
+        {}
+    ),
+    state: stateKeys.reduce(
+        (accumulator: IAnyProps, key) => {
+            if (!props.hasOwnProperty(key)) {
+                return accumulator;
+            }
 
-    const middlewareAPI = {
-        getState: store.getState,
-        dispatch: () => dispatchGuard(),
-    };
+            if (!accumulator) {
+                return { [key]: props[key] };
+            }
 
-    const chain = middlewares.map(middleware => middleware(middlewareAPI));
+            accumulator[key] = props[key];
 
-    return reduxCompose(...chain)(propsDispatch || store.dispatch) as Dispatch;
-}
+            return accumulator;
+        },
+        {}
+    ),
+}));
 
 export function buildStatefulComponent<T extends IClassNameProps>(
     cn: ClassNameFormatter,
     WrappedComponent: ComponentType<T>,
     componentReducer: Reducer,
 ) {
-    const getProps = memoize((props: IAnyProps, stateKeys: string[] = []) => ({
-        events: Object.keys(props).reduce(
-            (accumulator: IAnyProps, key) => {
-                if (stateKeys.indexOf(key) >= 0 || !props.hasOwnProperty(key)) {
-                    return accumulator;
-                }
-
-                accumulator[key] = props[key];
-
-                return accumulator;
-            },
-            {}
-        ),
-        state: stateKeys.reduce(
-            (accumulator: IAnyProps, key) => {
-                if (!props.hasOwnProperty(key)) {
-                    return accumulator;
-                }
-
-                if (!accumulator) {
-                    return { [key]: props[key] };
-                }
-
-                accumulator[key] = props[key];
-
-                return accumulator;
-            },
-            {}
-        ),
-    }));
-
     const internalStorageEnhancer: Wrapper<IDispatchProps> = ((NestedWrappedComponent: ComponentType<IAnyProps>) => (
         class extends PureComponent<IDispatchProps, Store> {
             constructor(props: IDispatchProps) {
@@ -139,7 +80,7 @@ export function buildStatefulComponent<T extends IClassNameProps>(
             private unsubscribeStoreChanges: Unsubscribe | undefined;
 
             private tryMergeProps() {
-                const { state } = getProps(this.props, this.watchKeys);
+                const { state } = getMemoizeProps(this.props, this.watchKeys);
 
                 const stateDiff = getStateDiff(this.state.getState(), state);
 
@@ -167,7 +108,7 @@ export function buildStatefulComponent<T extends IClassNameProps>(
             }
 
             render() {
-                const { events } = getProps(this.props, this.watchKeys);
+                const { events } = getMemoizeProps(this.props, this.watchKeys);
 
                 return (
                     <NestedWrappedComponent {...events} {...this.state.getState()} dispatch={this.state.dispatch} />
