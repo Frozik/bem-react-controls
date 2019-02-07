@@ -138,13 +138,7 @@ export function buildStatefulComponent<T extends IClassNameProps>(
             private watchKeys?: string[];
             private unsubscribeStoreChanges: Unsubscribe | undefined;
 
-            componentDidMount() {
-                this.watchKeys = Object.keys(this.state.getState());
-
-                this.unsubscribeStoreChanges = this.state.subscribe(this.forceUpdate.bind(this));
-            }
-
-            componentDidUpdate() {
+            private tryMergeProps() {
                 const { state } = getProps(this.props, this.watchKeys);
 
                 const stateDiff = getStateDiff(this.state.getState(), state);
@@ -152,6 +146,18 @@ export function buildStatefulComponent<T extends IClassNameProps>(
                 if (stateDiff) {
                     this.state.dispatch(Actions.merge(stateDiff));
                 }
+            }
+
+            componentDidMount() {
+                this.watchKeys = Object.keys(this.state.getState());
+
+                this.unsubscribeStoreChanges = this.state.subscribe(this.forceUpdate.bind(this));
+
+                this.tryMergeProps();
+            }
+
+            componentDidUpdate() {
+                this.tryMergeProps();
             }
 
             componentWillUnmount() {
