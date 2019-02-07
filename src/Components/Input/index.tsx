@@ -28,8 +28,4 @@ export const inputReducer = combineReducers({
     focused,
 });
 
-export const Input = buildStatefulComponent(
-    cnInput,
-    InputStatelessComponent,
-    inputReducer,
-);
+export const Input = buildStatefulComponent(InputStatelessComponent, inputReducer);

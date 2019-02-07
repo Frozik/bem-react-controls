@@ -5,10 +5,10 @@ import { Action, AnyAction, Dispatch, Reducer, Store, Unsubscribe } from "redux"
 import { compose, IClassNameProps, Wrapper } from "@bem-react/core";
 
 import { Actions } from "./actions";
-import { buildReducer } from "./reducer";
 import { buildStore, configureDispatch } from "./configuration";
-import { IAnyProps, IDispatchProps } from "./types";
 import { getDisplayName, getMemoizeProps, getStateDiff } from "./helpers";
+import { buildReducer } from "./reducer";
+import { IAnyProps, IDispatchProps } from "./types";
 
 export function buildStatefulComponent<T extends IClassNameProps>(
     WrappedComponent: ComponentType<T>,
