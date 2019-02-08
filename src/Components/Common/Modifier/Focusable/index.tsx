@@ -59,7 +59,7 @@ export function focusableModifierBuilder(cn: ClassNameFormatter): Wrapper<IFocus
             )
 
             private readonly onBlurEventHandler = (eventArgs: MouseEvent) => FocusableModifier.onFocusChangedHandler(
-                FocusState.Focused,
+                FocusState.Normal,
                 eventArgs,
                 this.context,
                 this.props.onFocusChanged,
