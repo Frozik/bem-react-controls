@@ -1,8 +1,10 @@
 import React, { FunctionComponent, SyntheticEvent } from "react";
+import { Dispatch } from "redux";
 
 import { cn } from "@bem-react/classname";
 import { IClassNameProps } from "@bem-react/core";
 
+import { DispatchContext } from "../Common/component.translator";
 import { Actions } from "./actions";
 
 export interface IInputProps extends IClassNameProps {
@@ -12,7 +14,7 @@ export interface IInputProps extends IClassNameProps {
 
 function onChangeHandler(
   eventArgs: SyntheticEvent,
-  props: { [prop: string]: any },
+  dispatch: Dispatch,
   onChange?: (string: string) => void,
 ) {
     const value = (eventArgs.target as HTMLInputElement).value || "";
@@ -21,17 +23,21 @@ function onChangeHandler(
         onChange(value);
     }
 
-    props.dispatch(Actions.changeValue(value));
+    dispatch(Actions.changeValue(value));
 
     eventArgs.stopPropagation();
 }
 
 export const cnInput = cn("Input");
 
-export const Input: FunctionComponent<IInputProps> = ({ dispatch, className, onChange, ...props }:  any) => (
-    <input
-        {...props}
-        onChange={(eventArgs: SyntheticEvent) => onChangeHandler(eventArgs, { dispatch, ...props }, onChange)}
-        className={cnInput({}, [className])}
-    />
+export const Input: FunctionComponent<IInputProps> = ({ className, onChange, ...props }) => (
+    <DispatchContext.Consumer>
+        {(dispatch) => (
+            <input
+                {...props}
+                onChange={(eventArgs: SyntheticEvent) => onChangeHandler(eventArgs, dispatch, onChange)}
+                className={cnInput({}, [className])}
+            />
+        )}
+    </DispatchContext.Consumer>
 );

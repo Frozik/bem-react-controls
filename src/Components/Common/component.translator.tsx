@@ -1,5 +1,5 @@
 import React, { ComponentType, PureComponent } from "react";
-import { ReactReduxContext, ReactReduxContextValue } from "react-redux";
+import { ReactReduxContext } from "react-redux";
 import { Action, AnyAction, Dispatch, Reducer, Store, Unsubscribe } from "redux";
 
 import { compose, IClassNameProps, Wrapper } from "@bem-react/core";
@@ -9,6 +9,8 @@ import { buildStore, configureDispatch } from "./configuration";
 import { getDisplayName, getMemoizeProps, getStateDiff } from "./helpers";
 import { buildReducer } from "./reducer";
 import { IAnyProps, IDispatchProps } from "./types";
+
+export const DispatchContext = React.createContext(<T extends Action = AnyAction>(action: T) => action);
 
 export function buildStatefulComponent<T extends IClassNameProps>(
     WrappedComponent: ComponentType<T>,
@@ -57,7 +59,9 @@ export function buildStatefulComponent<T extends IClassNameProps>(
                 const { events } = getMemoizeProps(this.props, this.watchKeys);
 
                 return (
-                    <NestedWrappedComponent {...events} {...this.state.getState()} dispatch={this.state.dispatch} />
+                    <DispatchContext.Provider value={this.state.dispatch}>
+                        <NestedWrappedComponent {...events} {...this.state.getState()} />
+                    </DispatchContext.Provider>
                 );
             }
         }
@@ -82,9 +86,7 @@ export function buildStatefulComponent<T extends IClassNameProps>(
                     );
                 }
 
-                this.setState({
-                    dispatch: configureDispatch(this.context as ReactReduxContextValue, this.props.dispatch),
-                });
+                this.setState({ dispatch: configureDispatch(this.context, this.props.dispatch) });
             }
 
             render() {
@@ -92,7 +94,9 @@ export function buildStatefulComponent<T extends IClassNameProps>(
                 const { cid, useGlobalStore, ...props } = this.props;
 
                 return (
-                    <NestedWrappedComponent {...props} dispatch={dispatch} />
+                    <DispatchContext.Provider value={dispatch}>
+                        {React.createElement(NestedWrappedComponent, props)}
+                    </DispatchContext.Provider>
                 );
             }
         }
@@ -113,9 +117,7 @@ export function buildStatefulComponent<T extends IClassNameProps>(
             private readonly baseComponent: ComponentType<IDispatchProps>;
 
             render() {
-                return (
-                    <this.baseComponent {...this.props} />
-                );
+                return React.createElement(this.baseComponent, this.props);
             }
         }
     );
