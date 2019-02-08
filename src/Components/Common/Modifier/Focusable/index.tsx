@@ -1,12 +1,22 @@
-import React, { ComponentType, EventHandler, MouseEvent } from "react";
+import React, { ComponentType, EventHandler, MouseEvent, PureComponent } from "react";
 import { Dispatch } from "redux";
 
 import { ClassNameFormatter } from "@bem-react/classname";
 import { classnames } from "@bem-react/classnames";
-import { Enhance, IClassNameProps, withBemMod } from "@bem-react/core";
+import { IClassNameProps, Wrapper } from "@bem-react/core";
 
 import { DispatchContext } from "../../component.translator";
 import { Actions } from "./actions";
+
+enum FocusState {
+    Focused,
+    Normal,
+}
+
+interface IHelperProps {
+    onFocus?: EventHandler<MouseEvent>;
+    onBlur?: EventHandler<MouseEvent>;
+}
 
 export * from "./actions";
 
@@ -15,49 +25,59 @@ export interface IFocusableProps extends IClassNameProps {
     onFocusChanged?: (hasFocus: boolean) => void;
 }
 
-function onFocusChangedHandler(
-    event: "onFocus" | "onBlur",
-    eventArgs: MouseEvent,
-    props: { [prop: string]: any },
-    dispatch: Dispatch,
-    onFocusChanged?: (hasFocus: boolean) => void,
-) {
-    const hasFocus = event === "onFocus";
+export function focusableModifierBuilder(cn: ClassNameFormatter): Wrapper<IFocusableProps> {
+    return (WrappedEntity: ComponentType<IFocusableProps & IHelperProps>) => (
+        class FocusableModifier extends PureComponent<IFocusableProps & IHelperProps> {
+            static contextType = DispatchContext;
 
-    if (onFocusChanged) {
-        onFocusChanged(hasFocus);
-    }
+            private static onFocusChangedHandler(
+                focusState: FocusState,
+                eventArgs: MouseEvent,
+                dispatch: Dispatch,
+                onFocusChanged?: (hasFocus: boolean) => void,
+                originalEventHandler?: EventHandler<MouseEvent>,
+            ) {
+                eventArgs.stopPropagation();
 
-    const originalEventHandler: EventHandler<MouseEvent> | undefined = props[event];
+                if (onFocusChanged) {
+                    onFocusChanged(focusState === FocusState.Focused);
+                }
 
-    if (originalEventHandler) {
-        originalEventHandler(eventArgs);
-    }
+                if (originalEventHandler) {
+                    originalEventHandler(eventArgs);
+                }
 
-    dispatch(Actions.changeFocus(hasFocus));
+                dispatch(Actions.changeFocus(focusState === FocusState.Focused));
+            }
 
-    eventArgs.stopPropagation();
-}
+            private readonly onFocusEventHandler = (eventArgs: MouseEvent) => FocusableModifier.onFocusChangedHandler(
+                FocusState.Focused,
+                eventArgs,
+                this.context,
+                this.props.onFocusChanged,
+                this.props.onFocus
+            )
 
-export function focusableModifierBuilder(cn: ClassNameFormatter) {
-    const Focusable:Enhance<IFocusableProps> = (WrappedEntity: ComponentType<IFocusableProps & IHelperProps>) =>
-        ({ onFocusChanged, focused, className, ...props }) => (
-            <DispatchContext.Consumer>
-                {(dispatch) => (
+            private readonly onBlurEventHandler = (eventArgs: MouseEvent) => FocusableModifier.onFocusChangedHandler(
+                FocusState.Focused,
+                eventArgs,
+                this.context,
+                this.props.onFocusChanged,
+                this.props.onBlur
+            )
+
+            render() {
+                const { className, focused, onFocusChanged, ...rest } = this.props;
+
+                return (
                     <WrappedEntity
-                        {...props}
-                        onFocus={(eventArgs: MouseEvent) => onFocusChangedHandler("onFocus", eventArgs, props, dispatch, onFocusChanged )}
-                        onBlur={(eventArgs: MouseEvent) => onFocusChangedHandler("onBlur", eventArgs, props, dispatch, onFocusChanged )}
+                        {...rest}
+                        onFocus={this.onFocusEventHandler}
+                        onBlur={this.onBlurEventHandler}
                         className={classnames(className, cn({ focused }))}
                     />
-                )}
-            </DispatchContext.Consumer>
-        );
-
-    interface IHelperProps {
-        onFocus?: EventHandler<MouseEvent>;
-        onBlur?: EventHandler<MouseEvent>;
-    }
-
-    return withBemMod<IFocusableProps>(cn(), { }, Focusable);
+                );
+            }
+        }
+    );
 }
