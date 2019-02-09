@@ -4,7 +4,7 @@ import { Reducer } from "redux";
 import { compose, IClassNameProps, Wrapper } from "@bem-react/core";
 
 import { IDispatchProps } from "./contracts";
-import { buildExternalStorageEnhancer, buildInternalStorageEnhancer } from "./wrappers-builder";
+import { buildExternalStorageEnhancer, buildInternalStorageEnhancer } from "./wrappers.builders";
 
 export function wrapToStatefulComponent<T extends IClassNameProps>(
     WrappedComponent: ComponentType<T>,

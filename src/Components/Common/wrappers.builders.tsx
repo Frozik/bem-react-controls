@@ -5,11 +5,11 @@ import { Action, AnyAction, Dispatch, Reducer, Store, Unsubscribe } from "redux"
 import { Wrapper } from "@bem-react/core";
 
 import { Actions } from "./actions";
-import { getDisplayName, getMemoizePropsBuilder, getStateDiff } from "./component.helpers";
 import { buildStore, configureDispatch } from "./configuration";
 import { IAnyProps, IDispatchProps } from "./contracts";
 import { DispatchContext } from "./modifier.helper";
 import { buildReducer } from "./reducer";
+import { getDisplayName, getMemoizePropsBuilder, getStateDiff } from "./wrapper.helpers";
 
 export const buildInternalStorageEnhancer = (componentReducer: Reducer): Wrapper<IDispatchProps> =>
     (NestedWrappedComponent: ComponentType<IAnyProps>) => (
