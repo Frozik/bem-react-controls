@@ -2,21 +2,17 @@ import React, { ComponentType, PureComponent } from "react";
 import { ReactReduxContext } from "react-redux";
 import { Action, AnyAction, Dispatch, Reducer, Store, Unsubscribe } from "redux";
 
-import { compose, IClassNameProps, Wrapper } from "@bem-react/core";
+import { Wrapper } from "@bem-react/core";
 
 import { Actions } from "./actions";
-import { buildStore, configureDispatch } from "./configuration";
 import { getDisplayName, getMemoizePropsBuilder, getStateDiff } from "./component.helpers";
+import { buildStore, configureDispatch } from "./configuration";
+import { IAnyProps, IDispatchProps } from "./contracts";
+import { DispatchContext } from "./modifier.helper";
 import { buildReducer } from "./reducer";
-import { IAnyProps, IDispatchProps } from "./types";
 
-export const DispatchContext = React.createContext(<T extends Action = AnyAction>(action: T) => action);
-
-export function buildStatefulComponent<T extends IClassNameProps>(
-    WrappedComponent: ComponentType<T>,
-    componentReducer: Reducer,
-) {
-    const internalStorageEnhancer: Wrapper<IDispatchProps> = ((NestedWrappedComponent: ComponentType<IAnyProps>) => (
+export const buildInternalStorageEnhancer = (componentReducer: Reducer): Wrapper<IDispatchProps> =>
+    (NestedWrappedComponent: ComponentType<IAnyProps>) => (
         class extends PureComponent<IDispatchProps, Store> {
             constructor(props: IDispatchProps) {
                 super(props);
@@ -66,9 +62,10 @@ export function buildStatefulComponent<T extends IClassNameProps>(
                 );
             }
         }
-    ));
+    );
 
-    const externalStorageEnhancer: Wrapper<IDispatchProps> = (NestedWrappedComponent: ComponentType<IAnyProps>) => (
+export const buildExternalStorageEnhancer = (): Wrapper<IDispatchProps> =>
+    (NestedWrappedComponent: ComponentType<IAnyProps>) => (
         class extends PureComponent<IDispatchProps, { dispatch: Dispatch }> {
             constructor(props: IDispatchProps) {
                 super(props);
@@ -102,26 +99,3 @@ export function buildStatefulComponent<T extends IClassNameProps>(
             }
         }
     );
-
-    const baseComponentSelector: Wrapper<IDispatchProps> = (NestedWrappedComponent: ComponentType) => (
-        class extends PureComponent<IDispatchProps> {
-            constructor(props: IDispatchProps) {
-                super(props);
-
-                const { useGlobalStore = false } = props;
-
-                this.baseComponent = useGlobalStore
-                    ? externalStorageEnhancer(NestedWrappedComponent)
-                    : internalStorageEnhancer(NestedWrappedComponent);
-            }
-
-            private readonly baseComponent: ComponentType<IDispatchProps>;
-
-            render() {
-                return React.createElement(this.baseComponent, this.props);
-            }
-        }
-    );
-
-    return compose(baseComponentSelector)(WrappedComponent);
-}

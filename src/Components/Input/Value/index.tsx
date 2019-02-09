@@ -3,8 +3,7 @@ import { Dispatch } from "redux";
 
 import { IClassNameProps, Wrapper } from "@bem-react/core";
 
-import { DispatchContext } from "../../Common/component.translator";
-import { cleanProps, propagateSourceEvent } from "../../Common/props.helper";
+import { cleanProps, DispatchContext, propagateSourceEvent } from "../../Common/modifier.helper";
 import { Actions } from "./actions";
 
 interface IHelperProps {

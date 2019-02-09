@@ -3,12 +3,13 @@ import { combineReducers } from "redux";
 import { compose } from "@bem-react/core";
 
 import { ActionsUnion } from "../Common/action.helper";
-import { buildStatefulComponent } from "../Common/component.translator";
+import { wrapToStatefulComponent } from "../Common/component.wrapper";
 import {
     Actions as FocusableActions, focusableModifierBuilder
 } from "../Common/Modifier/Focusable";
 import { focused } from "../Common/Modifier/Focusable/reducer";
-import { cnInput, InputComponent } from "./Input";
+import { cnInput } from "./name";
+import { InputComponent } from "./root";
 import { valueModifier } from "./Value";
 import { Actions as ValueActions } from "./Value/actions";
 import { value } from "./Value/reducer";
@@ -30,4 +31,4 @@ export const inputReducer = combineReducers({
     focused,
 });
 
-export const Input = buildStatefulComponent(InputStatelessComponent, inputReducer);
+export const Input = wrapToStatefulComponent(InputStatelessComponent, inputReducer);

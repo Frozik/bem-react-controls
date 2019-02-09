@@ -5,8 +5,7 @@ import { ClassNameFormatter } from "@bem-react/classname";
 import { classnames } from "@bem-react/classnames";
 import { IClassNameProps, Wrapper } from "@bem-react/core";
 
-import { DispatchContext } from "../../component.translator";
-import { cleanProps, propagateSourceEvent } from "../../props.helper";
+import { cleanProps, DispatchContext, propagateSourceEvent } from "../../modifier.helper";
 import { Actions } from "./actions";
 
 enum FocusState {
