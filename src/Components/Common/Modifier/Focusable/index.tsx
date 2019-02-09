@@ -1,4 +1,4 @@
-import React, { ComponentType, EventHandler, MouseEvent, PureComponent } from "react";
+import React, { ComponentType, EventHandler, PureComponent, SyntheticEvent } from "react";
 import { Dispatch } from "redux";
 
 import { ClassNameFormatter } from "@bem-react/classname";
@@ -6,6 +6,7 @@ import { classnames } from "@bem-react/classnames";
 import { IClassNameProps, Wrapper } from "@bem-react/core";
 
 import { DispatchContext } from "../../component.translator";
+import { cleanProps, propagateSourceEvent } from "../../props.helper";
 import { Actions } from "./actions";
 
 enum FocusState {
@@ -14,8 +15,8 @@ enum FocusState {
 }
 
 interface IHelperProps {
-    onFocus?: EventHandler<MouseEvent>;
-    onBlur?: EventHandler<MouseEvent>;
+    onFocus?: EventHandler<SyntheticEvent>;
+    onBlur?: EventHandler<SyntheticEvent>;
 }
 
 export * from "./actions";
@@ -32,46 +33,39 @@ export function focusableModifierBuilder(cn: ClassNameFormatter): Wrapper<IFocus
 
             private static onFocusChangedHandler(
                 focusState: FocusState,
-                eventArgs: MouseEvent,
                 dispatch: Dispatch,
                 onFocusChanged?: (hasFocus: boolean) => void,
-                originalEventHandler?: EventHandler<MouseEvent>,
             ) {
-                eventArgs.stopPropagation();
-
                 if (onFocusChanged) {
                     onFocusChanged(focusState === FocusState.Focused);
-                }
-
-                if (originalEventHandler) {
-                    originalEventHandler(eventArgs);
                 }
 
                 dispatch(Actions.changeFocus(focusState === FocusState.Focused));
             }
 
-            private readonly onFocusEventHandler = (eventArgs: MouseEvent) => FocusableModifier.onFocusChangedHandler(
+            private readonly onFocus = () => FocusableModifier.onFocusChangedHandler(
                 FocusState.Focused,
-                eventArgs,
                 this.context,
                 this.props.onFocusChanged,
-                this.props.onFocus
             )
 
-            private readonly onBlurEventHandler = (eventArgs: MouseEvent) => FocusableModifier.onFocusChangedHandler(
+            private readonly onBlur = () => FocusableModifier.onFocusChangedHandler(
                 FocusState.Normal,
-                eventArgs,
                 this.context,
                 this.props.onFocusChanged,
-                this.props.onBlur
             )
+
+            private readonly onFocusEventHandler = propagateSourceEvent(this.onFocus, this.props.onFocus);
+
+            private readonly onBlurEventHandler = propagateSourceEvent(this.onBlur, this.props.onFocus);
 
             render() {
-                const { className, focused, onFocusChanged, ...rest } = this.props;
+                const { className, focused } = this.props;
+                const cleanedProps = cleanProps(this.props, ["focused", "onFocusChanged"]);
 
                 return (
                     <WrappedEntity
-                        {...rest}
+                        {...cleanedProps}
                         onFocus={this.onFocusEventHandler}
                         onBlur={this.onBlurEventHandler}
                         className={classnames(className, cn({ focused }))}

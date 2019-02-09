@@ -40,7 +40,7 @@ class App extends Component<any, any> {
               <div>
                 <Input />
                 <Input focused={this.state.focused} onFocusChanged={(focused) => this.setState({ focused })}
-                      value={this.state.value} onChange={(value) => this.setState({ value })}
+                      value={this.state.value} onValueChanged={(value) => this.setState({ value })}
                 />
               </div>
             </article>
