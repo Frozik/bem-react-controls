@@ -3,7 +3,7 @@ import { Dispatch } from "redux";
 
 import { IClassNameProps, Wrapper } from "@bem-react/core";
 
-import { cleanProps, DispatchContext, propagateSourceEvent } from "../../Common/modifier.helper";
+import { cleanProps, DispatchContext, propagateSourceEvent } from "../../modifier.helper";
 import { Actions } from "./actions";
 
 interface IHelperProps {
@@ -17,7 +17,7 @@ export interface IValueProps extends IClassNameProps {
     onValueChanged?: (string: string) => void;
 }
 
-export const valueModifier: Wrapper<IValueProps> =
+export const valueModifierBuilder = (): Wrapper<IValueProps> =>
     (WrappedEntity: ComponentType<IValueProps & IHelperProps>) => (
         class ValueModifier extends PureComponent<IValueProps & IHelperProps> {
             static contextType = DispatchContext;

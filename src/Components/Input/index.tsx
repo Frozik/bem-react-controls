@@ -10,13 +10,13 @@ import {
 import { focused } from "../Common/Modifier/Focusable/reducer";
 import { cnInput } from "./name";
 import { InputComponent } from "./root";
-import { valueModifier } from "./Value";
-import { Actions as ValueActions } from "./Value/actions";
-import { value } from "./Value/reducer";
+import { valueModifierBuilder } from "../Common/Modifier/Value";
+import { Actions as ValueActions } from "../Common/Modifier/Value/actions";
+import { value } from "../Common/Modifier/Value/reducer";
 
 const InputStatelessComponent = compose(
     focusableModifierBuilder(cnInput),
-    valueModifier,
+    valueModifierBuilder(),
 )(InputComponent);
 
 export const inputActions = {
