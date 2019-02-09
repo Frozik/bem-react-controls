@@ -4,6 +4,6 @@ import { cn } from "@bem-react/classname";
 
 export const cnInput = cn("Input");
 
-export const Input: FunctionComponent = (props) => (
+export const InputComponent: FunctionComponent = (props) => (
     React.createElement("input", props)
 );

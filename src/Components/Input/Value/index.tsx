@@ -1,7 +1,6 @@
 import React, { ComponentType, EventHandler, PureComponent, SyntheticEvent } from "react";
 import { Dispatch } from "redux";
 
-import { ClassNameFormatter } from "@bem-react/classname";
 import { IClassNameProps, Wrapper } from "@bem-react/core";
 
 import { DispatchContext } from "../../Common/component.translator";
@@ -14,14 +13,14 @@ interface IHelperProps {
 
 export * from "./actions";
 
-export interface IInputProps extends IClassNameProps {
+export interface IValueProps extends IClassNameProps {
     value?: string;
     onValueChanged?: (string: string) => void;
 }
 
-export function valueModifierBuilder(cn: ClassNameFormatter): Wrapper<IInputProps> {
-    return (WrappedEntity: ComponentType<IInputProps & IHelperProps>) => (
-        class ValueModifier extends PureComponent<IInputProps & IHelperProps> {
+export const valueModifier: Wrapper<IValueProps> =
+    (WrappedEntity: ComponentType<IValueProps & IHelperProps>) => (
+        class ValueModifier extends PureComponent<IValueProps & IHelperProps> {
             static contextType = DispatchContext;
 
             private static onValueChangedHandler(
@@ -56,4 +55,3 @@ export function valueModifierBuilder(cn: ClassNameFormatter): Wrapper<IInputProp
             }
         }
     );
-}

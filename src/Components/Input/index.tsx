@@ -8,15 +8,15 @@ import {
     Actions as FocusableActions, focusableModifierBuilder
 } from "../Common/Modifier/Focusable";
 import { focused } from "../Common/Modifier/Focusable/reducer";
-import { cnInput, Input as Base } from "./Input";
-import { valueModifierBuilder } from "./Value";
+import { cnInput, InputComponent } from "./Input";
+import { valueModifier } from "./Value";
 import { Actions as ValueActions } from "./Value/actions";
 import { value } from "./Value/reducer";
 
 const InputStatelessComponent = compose(
     focusableModifierBuilder(cnInput),
-    valueModifierBuilder(cnInput),
-)(Base);
+    valueModifier,
+)(InputComponent);
 
 export const inputActions = {
     ...FocusableActions,

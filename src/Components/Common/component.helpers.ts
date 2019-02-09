@@ -27,7 +27,7 @@ export function getStateDiff(state: IAnyProps, props: IAnyProps): IAnyProps | un
     );
 }
 
-export const getMemoizeProps = memoize((props: IAnyProps, stateKeys: string[] = []) => (Object.keys(props).reduce(
+export const getMemoizePropsBuilder = () => memoize((props: IAnyProps, stateKeys: string[] = []) => (Object.keys(props).reduce(
     (accumulator: { events: IAnyProps, state: IAnyProps }, key) => {
         const type: keyof (typeof accumulator) = stateKeys.indexOf(key) >= 0 ? "state" : "events";
 

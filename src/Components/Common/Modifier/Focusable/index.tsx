@@ -26,8 +26,8 @@ export interface IFocusableProps extends IClassNameProps {
     onFocusChanged?: (hasFocus: boolean) => void;
 }
 
-export function focusableModifierBuilder(cn: ClassNameFormatter): Wrapper<IFocusableProps> {
-    return (WrappedEntity: ComponentType<IFocusableProps & IHelperProps>) => (
+export const focusableModifierBuilder = (cn: ClassNameFormatter): Wrapper<IFocusableProps> =>
+    (WrappedEntity: ComponentType<IFocusableProps & IHelperProps>) => (
         class FocusableModifier extends PureComponent<IFocusableProps & IHelperProps> {
             static contextType = DispatchContext;
 
@@ -74,4 +74,3 @@ export function focusableModifierBuilder(cn: ClassNameFormatter): Wrapper<IFocus
             }
         }
     );
-}

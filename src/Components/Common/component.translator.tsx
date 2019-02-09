@@ -6,7 +6,7 @@ import { compose, IClassNameProps, Wrapper } from "@bem-react/core";
 
 import { Actions } from "./actions";
 import { buildStore, configureDispatch } from "./configuration";
-import { getDisplayName, getMemoizeProps, getStateDiff } from "./helpers";
+import { getDisplayName, getMemoizePropsBuilder, getStateDiff } from "./component.helpers";
 import { buildReducer } from "./reducer";
 import { IAnyProps, IDispatchProps } from "./types";
 
@@ -24,11 +24,12 @@ export function buildStatefulComponent<T extends IClassNameProps>(
                 this.state = buildStore(buildReducer(componentReducer));
             }
 
+            private readonly getMemoizeProps = getMemoizePropsBuilder();
             private watchKeys?: string[];
             private unsubscribeStoreChanges: Unsubscribe | undefined;
 
             private tryMergeProps() {
-                const { state } = getMemoizeProps(this.props, this.watchKeys);
+                const { state } = this.getMemoizeProps(this.props, this.watchKeys);
 
                 const stateDiff = getStateDiff(this.state.getState(), state);
 
@@ -56,7 +57,7 @@ export function buildStatefulComponent<T extends IClassNameProps>(
             }
 
             render() {
-                const { events } = getMemoizeProps(this.props, this.watchKeys);
+                const { events } = this.getMemoizeProps(this.props, this.watchKeys);
 
                 return (
                     <DispatchContext.Provider value={this.state.dispatch}>
