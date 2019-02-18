@@ -2,17 +2,16 @@ import React, { ComponentType, PureComponent } from "react";
 import { ReactReduxContext } from "react-redux";
 import { Action, AnyAction, Dispatch, Reducer, Store, Unsubscribe } from "redux";
 
-import { Wrapper } from "@bem-react/core";
-
+import { Enhancer } from "../../bem/enhancer";
 import { Actions } from "./actions";
 import { buildStore, configureDispatch } from "./configuration";
-import { IAnyProps, IDispatchProps } from "./contracts";
+import { IDispatchProps } from "./contracts";
 import { DispatchContext } from "./modifier.helper";
 import { buildReducer } from "./reducer";
 import { getDisplayName, getMemoizePropsBuilder, getStateDiff } from "./wrapper.helpers";
 
-export const buildInternalStorageEnhancer = (componentReducer: Reducer): Wrapper<IDispatchProps> =>
-    (NestedWrappedComponent: ComponentType<IAnyProps>) => (
+export const buildInternalStorageEnhancer = (componentReducer: Reducer): Enhancer<IDispatchProps> =>
+    (NestedWrappedComponent: ComponentType<any>) => (
         class extends PureComponent<IDispatchProps, Store> {
             constructor(props: IDispatchProps) {
                 super(props);
@@ -64,8 +63,8 @@ export const buildInternalStorageEnhancer = (componentReducer: Reducer): Wrapper
         }
     );
 
-export const buildExternalStorageEnhancer = (): Wrapper<IDispatchProps> =>
-    (NestedWrappedComponent: ComponentType<IAnyProps>) => (
+export const buildExternalStorageEnhancer = (): Enhancer<IDispatchProps> =>
+    (NestedWrappedComponent: ComponentType<any>) => (
         class extends PureComponent<IDispatchProps, { dispatch: Dispatch }> {
             constructor(props: IDispatchProps) {
                 super(props);

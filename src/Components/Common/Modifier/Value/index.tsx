@@ -1,9 +1,9 @@
 import React, { ComponentType, EventHandler, PureComponent, SyntheticEvent } from "react";
 import { Dispatch } from "redux";
 
-import { IClassNameProps, Wrapper } from "@bem-react/core";
-
-import { cleanProps, DispatchContext, propagateSourceEvent } from "../../modifier.helper";
+import { IClassNameProps } from "../../../../bem/contracts";
+import { Enhancer } from "../../../../bem/enhancer";
+import { DispatchContext, propagateSourceEvent } from "../../modifier.helper";
 import { Actions } from "./actions";
 
 interface IHelperProps {
@@ -17,8 +17,8 @@ export interface IValueProps extends IClassNameProps {
     onValueChanged?: (string: string) => void;
 }
 
-export const valueModifierBuilder = (): Wrapper<IValueProps> =>
-    (WrappedEntity: ComponentType<IValueProps & IHelperProps>) => (
+export const valueModifierBuilder = (): Enhancer<IValueProps> =>
+    (WrappedEntity: ComponentType<any>) => (
         class ValueModifier extends PureComponent<IValueProps & IHelperProps> {
             static contextType = DispatchContext;
 
@@ -43,11 +43,9 @@ export const valueModifierBuilder = (): Wrapper<IValueProps> =>
             private readonly onChangeEventHandler = propagateSourceEvent(this.onValueChanged, this.props.onChange);
 
             render() {
-                const cleanedProps = cleanProps(this.props, ["onValueChanged"]);
-
                 return (
                     <WrappedEntity
-                        {...cleanedProps}
+                        {...this.props}
                         onChange={this.onChangeEventHandler}
                     />
                 );

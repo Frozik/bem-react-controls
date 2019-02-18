@@ -1,3 +1,3 @@
-import { cn } from "@bem-react/classname";
+import { componentName } from "../../bem/component-name";
 
-export const cnInput = cn("Input");
+export const cnInput = componentName("input");

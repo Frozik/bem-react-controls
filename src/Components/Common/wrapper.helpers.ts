@@ -1,6 +1,8 @@
 import memoize from "memoize-one";
 
-import { IAnyProps } from "./contracts";
+interface IAnyProps {
+    [key: string]: any;
+}
 
 export function getDisplayName(WrappedComponent: any) {
     return WrappedComponent.displayName || WrappedComponent.name || "Component";

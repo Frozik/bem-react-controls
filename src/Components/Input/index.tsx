@@ -1,23 +1,23 @@
 import { combineReducers } from "redux";
 
-import { compose } from "@bem-react/core";
-
-import { ActionsUnion } from "../Common/action.helper";
-import { wrapToStatefulComponent } from "../Common/component.wrapper";
+import { compose } from "../../bem/compose";
+import { ActionsUnion } from "../common/action.helper";
+import { wrapToStatefulComponent } from "../common/component.wrapper";
 import {
     Actions as FocusableActions, focusableModifierBuilder
-} from "../Common/Modifier/Focusable";
-import { focused } from "../Common/Modifier/Focusable/reducer";
+} from "../common/modifier/focusable";
+import { focused } from "../common/modifier/focusable/reducer";
+import { valueModifierBuilder } from "../common/modifier/value";
+import { Actions as ValueActions } from "../common/modifier/value/actions";
+import { value } from "../common/modifier/value/reducer";
 import { cnInput } from "./name";
 import { InputComponent } from "./root";
-import { valueModifierBuilder } from "../Common/Modifier/Value";
-import { Actions as ValueActions } from "../Common/Modifier/Value/actions";
-import { value } from "../Common/Modifier/Value/reducer";
 
 const InputStatelessComponent = compose(
+    InputComponent,
     focusableModifierBuilder(cnInput),
     valueModifierBuilder(),
-)(InputComponent);
+);
 
 export const inputActions = {
     ...FocusableActions,
@@ -31,4 +31,4 @@ export const inputReducer = combineReducers({
     focused,
 });
 
-export const Input = wrapToStatefulComponent(InputStatelessComponent, inputReducer);
+export const Input = wrapToStatefulComponent(cnInput, InputStatelessComponent, inputReducer);

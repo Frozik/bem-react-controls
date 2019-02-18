@@ -1,10 +1,11 @@
+import "./App.scss";
+
 import React, { Component } from "react";
 import { Provider } from "react-redux";
-import { applyMiddleware, createStore, combineReducers, Unsubscribe } from "redux";
+import { applyMiddleware, combineReducers, createStore, Unsubscribe } from "redux";
 import logger from "redux-logger";
 
-import { Input, inputReducer } from "./Components";
-import "./App.scss";
+import { Input, inputReducer } from "./components";
 
 const store = createStore(combineReducers({
   firstInput: inputReducer,

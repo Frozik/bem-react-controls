@@ -1,4 +1,4 @@
-export * from "./Input";
+export * from "./input";
 
 // todo:
 // 0) Add possibility to pass CID property to component.translator

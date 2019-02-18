@@ -3,8 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@bem-react/classname": "^1.4.3",
-    "@bem-react/core": "^1.6.3",
+    "@types/classnames": "^2.2.7",
     "@types/jest": "^23.3.13",
     "@types/memoize-one": "^4.1.0",
     "@types/node": "^10.12.21",
@@ -13,6 +12,7 @@
     "@types/react-redux": "^7.0.1",
     "@types/redux": "^3.6.0",
     "@types/redux-logger": "^3.0.6",
+    "classnames": "^2.2.6",
     "memoize-one": "^5.0.0",
     "node-sass": "^4.11.0",
     "react": "^16.7.0",
@@ -38,5 +38,6 @@
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ]
+  ],
+  "devDependencies": {}
 }

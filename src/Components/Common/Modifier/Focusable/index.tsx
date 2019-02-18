@@ -1,11 +1,11 @@
+import classnames from "classnames";
 import React, { ComponentType, EventHandler, PureComponent, SyntheticEvent } from "react";
 import { Dispatch } from "redux";
 
-import { ClassNameFormatter } from "@bem-react/classname";
-import { classnames } from "@bem-react/classnames";
-import { IClassNameProps, Wrapper } from "@bem-react/core";
-
-import { cleanProps, DispatchContext, propagateSourceEvent } from "../../modifier.helper";
+import { ComponentName } from "../../../../bem/component-name";
+import { IClassNameProps } from "../../../../bem/contracts";
+import { Enhancer } from "../../../../bem/enhancer";
+import { DispatchContext, propagateSourceEvent } from "../../modifier.helper";
 import { Actions } from "./actions";
 
 enum FocusState {
@@ -25,8 +25,8 @@ export interface IFocusableProps extends IClassNameProps {
     onFocusChanged?: (hasFocus: boolean) => void;
 }
 
-export const focusableModifierBuilder = (cn: ClassNameFormatter): Wrapper<IFocusableProps> =>
-    (WrappedEntity: ComponentType<IFocusableProps & IHelperProps>) => (
+export const focusableModifierBuilder = (componentName: ComponentName): Enhancer<IFocusableProps> =>
+    (WrappedEntity: ComponentType<any>) => (
         class FocusableModifier extends PureComponent<IFocusableProps & IHelperProps> {
             static contextType = DispatchContext;
 
@@ -60,14 +60,13 @@ export const focusableModifierBuilder = (cn: ClassNameFormatter): Wrapper<IFocus
 
             render() {
                 const { className, focused } = this.props;
-                const cleanedProps = cleanProps(this.props, ["focused", "onFocusChanged"]);
 
                 return (
                     <WrappedEntity
-                        {...cleanedProps}
+                        {...this.props}
                         onFocus={this.onFocusEventHandler}
                         onBlur={this.onBlurEventHandler}
-                        className={classnames(className, cn({ focused }))}
+                        className={classnames(className, componentName({ focused }) as string)}
                     />
                 );
             }
