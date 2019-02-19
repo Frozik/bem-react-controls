@@ -2,7 +2,7 @@ import classnames from "classnames";
 import React, { ComponentType, memo, PureComponent } from "react";
 
 import { ComponentName } from "./component-name";
-import { IClassNameProps } from "./contracts";
+import { ComponentNameContext, IClassNameProps } from "./contracts";
 
 export type Enhancer<P = {}> = (Component: ComponentType<any>) => ComponentType<P>;
 
@@ -39,7 +39,6 @@ function isActionModifier(modifier: any): modifier is ActionModifier {
 }
 
 export function buildConditionalEnhancer<P extends IClassNameProps>(
-    componentName: ComponentName,
     enhancer: Enhancer<P>,
     modifiers?: Modifiers<P>,
 ): Enhancer<P> {
@@ -69,25 +68,17 @@ export function buildConditionalEnhancer<P extends IClassNameProps>(
                 this._omitKeys = this._keys.filter((key) => !this._modifiers[key].keepInProps);
                 this._classNameKeys = this._keys.filter((key) => this._modifiers[key].useForClassName);
 
-                const componentWithSubProps = memo<ComponentType<P>>((props: P) => {
-                    const subProps = {} as P;
-
-                    for (const key in props) {
-                        if (!props.hasOwnProperty(key) || this._omitKeys.indexOf(key) >= 0) {
-                            continue;
-                        }
-
-                        subProps[key] = props[key];
-                    }
-
-                    subProps.className = classnames(props.className, this.buildClassNames());
-
-                    return React.createElement(Component, subProps);
-                });
+                const componentWithSubProps = memo<ComponentType<P>>((props: P) => (
+                    <ComponentNameContext.Consumer>
+                        { (componentName) => React.createElement(Component, this.buildSubProps(componentName, props)) }
+                    </ComponentNameContext.Consumer>
+                ));
 
                 this._enhancedComponent = enhancer(componentWithSubProps);
 
             }
+
+            static contextType = ComponentNameContext;
 
             private readonly _keys: Array<keyof P>;
             private readonly _omitKeys: Array<keyof P>;
@@ -105,7 +96,23 @@ export function buildConditionalEnhancer<P extends IClassNameProps>(
                 });
             }
 
-            private buildClassNames(): string {
+            private buildSubProps(componentName: ComponentName, props: P) {
+                const subProps = {} as P;
+
+                for (const key in props) {
+                    if (!props.hasOwnProperty(key) || this._omitKeys.indexOf(key) >= 0) {
+                        continue;
+                    }
+
+                    subProps[key] = props[key];
+                }
+
+                subProps.className = classnames(props.className, this.buildClassNames(componentName));
+
+                return subProps;
+            }
+
+            private buildClassNames(componentName: ComponentName): string {
                 const modifierClassNames = this._classNameKeys.reduce(
                     (classModifier, key) => {
                         classModifier[key] = this.props[key];

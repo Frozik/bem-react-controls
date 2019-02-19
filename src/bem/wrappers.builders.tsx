@@ -54,8 +54,8 @@ export const buildInternalStorageEnhancer = (componentReducer: Reducer): Enhance
                 const { events } = this.getMemoizeProps(this.props, this.watchKeys);
 
                 return (
-                    <DispatchContext.Provider value={this.state.dispatch}>
-                        <NestedWrappedComponent {...events} {...this.state.getState()} />
+                    <DispatchContext.Provider value={ this.state.dispatch }>
+                        <NestedWrappedComponent { ...events } { ...this.state.getState() } />
                     </DispatchContext.Provider>
                 );
             }
@@ -90,8 +90,8 @@ export const buildExternalStorageEnhancer = (): Enhancer<IDispatchProps> =>
                 const { cid, useGlobalStore, ...props } = this.props;
 
                 return (
-                    <DispatchContext.Provider value={dispatch}>
-                        {React.createElement(NestedWrappedComponent, props)}
+                    <DispatchContext.Provider value={ dispatch }>
+                        { React.createElement(NestedWrappedComponent, props) }
                     </DispatchContext.Provider>
                 );
             }

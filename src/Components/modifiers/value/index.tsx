@@ -1,11 +1,11 @@
 import React, { ComponentType, EventHandler, PureComponent, SyntheticEvent } from "react";
 import { Dispatch } from "redux";
 
+import { ComponentName } from "../../../bem/component-name";
 import { DispatchContext, IClassNameProps } from "../../../bem/contracts";
-import { Enhancer, buildConditionalEnhancer, RemoveModifier } from "../../../bem/enhancer";
+import { buildConditionalEnhancer, Enhancer, RemoveModifier } from "../../../bem/enhancer";
 import { propagateDomEvent } from "../../../bem/modifier.helper";
 import { Actions } from "./actions";
-import { ComponentName } from "../../../bem/component-name";
 
 interface IHelperProps {
     onChange?: EventHandler<SyntheticEvent>;
@@ -53,9 +53,9 @@ const valueEnhancer: Enhancer<IValueProps> = (WrappedEntity: ComponentType<any>)
     }
 );
 
-export const valueModifierBuilder = (componentName: ComponentName): Enhancer<IValueProps> =>
-        buildConditionalEnhancer(
-            componentName,
-            valueEnhancer,
-            { onValueChanged: RemoveModifier },
-        );
+export const valueModifier = buildConditionalEnhancer(
+    valueEnhancer,
+    {
+        onValueChanged: RemoveModifier,
+    },
+);

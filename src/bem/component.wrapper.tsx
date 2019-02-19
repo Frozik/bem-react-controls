@@ -4,7 +4,7 @@ import { Reducer } from "redux";
 
 import { ComponentName } from "./component-name";
 import { compose } from "./compose";
-import { IClassNameProps, IDispatchProps } from "./contracts";
+import { ComponentNameContext, IClassNameProps, IDispatchProps } from "./contracts";
 import { Enhancer } from "./enhancer";
 import { buildExternalStorageEnhancer, buildInternalStorageEnhancer } from "./wrappers.builders";
 
@@ -28,7 +28,14 @@ export function wrapToStatefulComponent<T extends IClassNameProps>(
             private readonly baseComponent: ComponentType<IDispatchProps>;
 
             render() {
-                return <this.baseComponent {...this.props} className={classnames(this.props.className, componentName.toString())} />;
+                return (
+                    <ComponentNameContext.Provider value={ componentName }>
+                        <this.baseComponent
+                            { ...this.props }
+                            className={ classnames(this.props.className, componentName.toString()) }
+                        />
+                    </ComponentNameContext.Provider>
+                );
             }
         }
     );

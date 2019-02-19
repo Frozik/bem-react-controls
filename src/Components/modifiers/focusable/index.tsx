@@ -3,7 +3,9 @@ import { Dispatch } from "redux";
 
 import { ComponentName } from "../../../bem/component-name";
 import { DispatchContext, IClassNameProps } from "../../../bem/contracts";
-import { Enhancer, buildConditionalEnhancer, MatchNone, RemoveModifier } from "../../../bem/enhancer";
+import {
+    buildConditionalEnhancer, Enhancer, MatchNone, RemoveModifier
+} from "../../../bem/enhancer";
 import { propagateDomEvent } from "../../../bem/modifier.helper";
 import { Actions } from "./actions";
 
@@ -68,9 +70,10 @@ const focusableEnhancer: Enhancer<IFocusableProps> = (WrappedEntity: ComponentTy
     }
 );
 
-export const focusableModifierBuilder = (componentName: ComponentName): Enhancer<IFocusableProps> =>
-    buildConditionalEnhancer(
-        componentName,
-        focusableEnhancer,
-        { focused: MatchNone, onFocusChanged: RemoveModifier },
-    );
+export const focusableModifier = buildConditionalEnhancer(
+    focusableEnhancer,
+    {
+        focused: MatchNone,
+        onFocusChanged: RemoveModifier,
+    },
+);
