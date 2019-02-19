@@ -6,7 +6,7 @@ import { DispatchContext, IClassNameProps } from "../../../bem/contracts";
 import {
     buildConditionalEnhancer, Enhancer, RemoveModifier, SkipMatch
 } from "../../../bem/enhancer";
-import { propagateDomEvent } from "../../../bem/modifier.helper";
+import { propagateDomEvent } from "../../modifier.helper";
 import { Actions } from "./actions";
 
 enum FocusState {

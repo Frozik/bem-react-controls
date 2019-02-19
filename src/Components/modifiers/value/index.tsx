@@ -4,7 +4,7 @@ import { Dispatch } from "redux";
 import { ComponentName } from "../../../bem/component-name";
 import { DispatchContext, IClassNameProps } from "../../../bem/contracts";
 import { buildConditionalEnhancer, Enhancer, RemoveModifier } from "../../../bem/enhancer";
-import { propagateDomEvent } from "../../../bem/modifier.helper";
+import { propagateDomEvent } from "../../modifier.helper";
 import { Actions } from "./actions";
 
 interface IHelperProps {
