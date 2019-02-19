@@ -1,5 +1,5 @@
 import classnames from "classnames";
-import React, { ComponentType, memo, PureComponent } from "react";
+import React, { ComponentType, PureComponent } from "react";
 
 import { ComponentName } from "./component-name";
 import { ComponentNameContext, IClassNameProps } from "./contracts";
@@ -7,9 +7,9 @@ import { ComponentNameContext, IClassNameProps } from "./contracts";
 export type Enhancer<P = {}> = (Component: ComponentType<any>) => ComponentType<P>;
 
 export const MatchAny = Symbol("*");
-export const MatchNone = Symbol("-");
+export const SkipMatch = Symbol("-");
 export const RemoveModifier: ActionModifier = Object.freeze({
-    match: MatchNone,
+    match: SkipMatch,
     keepInProps: false,
     useForClassName: false,
 });
@@ -68,13 +68,7 @@ export function buildConditionalEnhancer<P extends IClassNameProps>(
                 this._omitKeys = this._keys.filter((key) => !this._modifiers[key].keepInProps);
                 this._classNameKeys = this._keys.filter((key) => this._modifiers[key].useForClassName);
 
-                const componentWithSubProps = memo<ComponentType<P>>((props: P) => (
-                    <ComponentNameContext.Consumer>
-                        { (componentName) => React.createElement(Component, this.buildSubProps(componentName, props)) }
-                    </ComponentNameContext.Consumer>
-                ));
-
-                this._enhancedComponent = enhancer(componentWithSubProps);
+                this._enhancedComponent = enhancer(this.cleanPropsComponent);
 
             }
 
@@ -90,7 +84,7 @@ export function buildConditionalEnhancer<P extends IClassNameProps>(
                 return this._keys.every((key) => {
                     const modifierValue = this._modifiers[key].match;
 
-                    return modifierValue === MatchNone ||
+                    return modifierValue === SkipMatch ||
                         (modifierValue === MatchAny && key in this.props) ||
                         modifierValue === this.props[key];
                 });
@@ -124,6 +118,15 @@ export function buildConditionalEnhancer<P extends IClassNameProps>(
 
                 return componentName(modifierClassNames).toString();
             }
+
+            private cleanPropsComponent = (props: P) => (
+                <ComponentNameContext.Consumer>
+                    { (componentName) => React.createElement(
+                        Component,
+                        this.buildSubProps(componentName, props),
+                    ) }
+                </ComponentNameContext.Consumer>
+            )
 
             render() {
                 return this.shouldWrapInEnhancer()
