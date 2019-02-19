@@ -3,7 +3,7 @@ import { ReactReduxContext } from "react-redux";
 import { Action, AnyAction, Dispatch, Reducer, Store, Unsubscribe } from "redux";
 
 import { Actions } from "./actions";
-import { buildStore, configureDispatch } from "./configuration";
+import { buildStore, configureDispatch } from "./redux.configuration";
 import { DispatchContext, IDispatchProps } from "./contracts";
 import { Enhancer } from "./enhancer";
 import { mergePropsReducer } from "./reducers";
