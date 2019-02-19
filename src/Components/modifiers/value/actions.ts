@@ -1,4 +1,4 @@
-import { ActionsUnion, createAction } from "../../action.helper";
+import { ActionsUnion, createAction } from "../../../bem/action.helper";
 
 export enum ActionTypes {
     VALUE_CHANGED = "[component] VALUE_CHANGED",

@@ -2,11 +2,10 @@ import classnames from "classnames";
 import React, { ComponentType, PureComponent } from "react";
 import { Reducer } from "redux";
 
-import { ComponentName } from "../../bem/component-name";
-import { compose } from "../../bem/compose";
-import { IClassNameProps } from "../../bem/contracts";
-import { Enhancer } from "../../bem/enhancer";
-import { IDispatchProps } from "./contracts";
+import { ComponentName } from "./component-name";
+import { compose } from "./compose";
+import { IClassNameProps, IDispatchProps } from "./contracts";
+import { Enhancer } from "./enhancer";
 import { buildExternalStorageEnhancer, buildInternalStorageEnhancer } from "./wrappers.builders";
 
 export function wrapToStatefulComponent<T extends IClassNameProps>(

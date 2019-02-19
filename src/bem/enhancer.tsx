@@ -7,6 +7,12 @@ import { IClassNameProps } from "./contracts";
 export type Enhancer<P = {}> = (Component: ComponentType<any>) => ComponentType<P>;
 
 export const MatchAny = Symbol("*");
+export const MatchNone = Symbol("-");
+export const RemoveModifier: ActionModifier = Object.freeze({
+    match: MatchNone,
+    keepInProps: false,
+    useForClassName: false,
+});
 
 type OmitModifier = string | number | boolean | Symbol;
 
@@ -34,19 +40,19 @@ function isActionModifier(modifier: any): modifier is ActionModifier {
 
 export function buildConditionalEnhancer<P extends IClassNameProps>(
     componentName: ComponentName,
-    modifiers: Modifiers<P>,
     enhancer: Enhancer<P>,
+    modifiers?: Modifiers<P>,
 ): Enhancer<P> {
     return (Component: ComponentType<any>) => (
         class extends PureComponent<P> {
             constructor(props: P) {
                 super(props);
 
-                this._keys = Object.keys(modifiers) as Array<keyof P>;
+                this._keys = modifiers ? Object.keys(modifiers) as Array<keyof P> : [];
 
                 this._modifiers = this._keys.reduce(
                     (buildModifiers, key) => {
-                        const modifierValue = modifiers[key];
+                        const modifierValue = (modifiers as Modifiers<P>)[key];
 
                         buildModifiers[key] = Object.assign(
                             { useForClassName: true, keepInProps: false },
@@ -60,11 +66,11 @@ export function buildConditionalEnhancer<P extends IClassNameProps>(
                     {} as FullModifiers<P>,
                 );
 
-                this._omitKeys = this._keys.filter((key) => this._modifiers[key].keepInProps);
+                this._omitKeys = this._keys.filter((key) => !this._modifiers[key].keepInProps);
                 this._classNameKeys = this._keys.filter((key) => this._modifiers[key].useForClassName);
 
                 const componentWithSubProps = memo<ComponentType<P>>((props: P) => {
-                    const subProps = {} as { [key in keyof P]: P[key] };
+                    const subProps = {} as P;
 
                     for (const key in props) {
                         if (!props.hasOwnProperty(key) || this._omitKeys.indexOf(key) >= 0) {
@@ -93,7 +99,9 @@ export function buildConditionalEnhancer<P extends IClassNameProps>(
                 return this._keys.every((key) => {
                     const modifierValue = this._modifiers[key].match;
 
-                    return (modifierValue === MatchAny && key in this.props) || modifierValue === this.props[key];
+                    return modifierValue === MatchNone ||
+                        (modifierValue === MatchAny && key in this.props) ||
+                        modifierValue === this.props[key];
                 });
             }
 
@@ -107,7 +115,7 @@ export function buildConditionalEnhancer<P extends IClassNameProps>(
                     {} as ClassModifiers<P>,
                 );
 
-                return componentName(modifierClassNames, true).toString();
+                return componentName(modifierClassNames).toString();
             }
 
             render() {

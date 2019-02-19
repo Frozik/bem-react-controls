@@ -1,9 +1,6 @@
-import React, { EventHandler, SyntheticEvent } from "react";
-import { Action, AnyAction } from "redux";
+import { EventHandler, SyntheticEvent } from "react";
 
-export const DispatchContext = React.createContext(<T extends Action = AnyAction>(action: T) => action);
-
-export function propagateSourceEvent<E extends SyntheticEvent>(
+export function propagateDomEvent<E extends SyntheticEvent>(
     handler: EventHandler<E>,
     propsEventHandler?: EventHandler<E>,
     stopEventPropagation: boolean = true

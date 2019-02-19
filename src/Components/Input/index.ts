@@ -1,22 +1,20 @@
 import { combineReducers } from "redux";
 
+import { ActionsUnion } from "../../bem/action.helper";
+import { wrapToStatefulComponent } from "../../bem/component.wrapper";
 import { compose } from "../../bem/compose";
-import { ActionsUnion } from "../common/action.helper";
-import { wrapToStatefulComponent } from "../common/component.wrapper";
-import {
-    Actions as FocusableActions, focusableModifierBuilder
-} from "../common/modifier/focusable";
-import { focused } from "../common/modifier/focusable/reducer";
-import { valueModifierBuilder } from "../common/modifier/value";
-import { Actions as ValueActions } from "../common/modifier/value/actions";
-import { value } from "../common/modifier/value/reducer";
+import { Actions as FocusableActions, focusableModifierBuilder } from "../modifiers/focusable";
+import { focused } from "../modifiers/focusable/reducer";
+import { valueModifierBuilder } from "../modifiers/value";
+import { Actions as ValueActions } from "../modifiers/value/actions";
+import { value } from "../modifiers/value/reducer";
 import { cnInput } from "./name";
 import { InputComponent } from "./root";
 
 const InputStatelessComponent = compose(
     InputComponent,
     focusableModifierBuilder(cnInput),
-    valueModifierBuilder(),
+    valueModifierBuilder(cnInput),
 );
 
 export const inputActions = {

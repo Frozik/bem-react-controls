@@ -2,7 +2,7 @@ import { AnyAction, Reducer } from "redux";
 
 import { ActionTypes } from "./actions";
 
-export function buildReducer(combinedReducer: Reducer): Reducer {
+export function mergePropsReducer(combinedReducer: Reducer): Reducer {
     return (state: any, action: AnyAction) => {
         switch (action.type) {
             case ActionTypes.PROPS_MERGE:

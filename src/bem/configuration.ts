@@ -3,7 +3,7 @@ import { applyMiddleware, compose, createStore, Dispatch, Middleware, Reducer, S
 import logger from "redux-logger";
 import thunk from "redux-thunk";
 
-export function getMiddleWares(useStoreLogging?: boolean): Middleware[] {
+function getMiddleWares(useStoreLogging?: boolean): Middleware[] {
     const middlewares: Middleware[] = [thunk];
 
     if (!useStoreLogging && process.env.NODE_ENV !== "production") {

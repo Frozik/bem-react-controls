@@ -2,12 +2,11 @@ import React, { ComponentType, PureComponent } from "react";
 import { ReactReduxContext } from "react-redux";
 import { Action, AnyAction, Dispatch, Reducer, Store, Unsubscribe } from "redux";
 
-import { Enhancer } from "../../bem/enhancer";
 import { Actions } from "./actions";
 import { buildStore, configureDispatch } from "./configuration";
-import { IDispatchProps } from "./contracts";
-import { DispatchContext } from "./modifier.helper";
-import { buildReducer } from "./reducer";
+import { DispatchContext, IDispatchProps } from "./contracts";
+import { Enhancer } from "./enhancer";
+import { mergePropsReducer } from "./reducers";
 import { getDisplayName, getMemoizePropsBuilder, getStateDiff } from "./wrapper.helpers";
 
 export const buildInternalStorageEnhancer = (componentReducer: Reducer): Enhancer<IDispatchProps> =>
@@ -16,7 +15,7 @@ export const buildInternalStorageEnhancer = (componentReducer: Reducer): Enhance
             constructor(props: IDispatchProps) {
                 super(props);
 
-                this.state = buildStore(buildReducer(componentReducer));
+                this.state = buildStore(mergePropsReducer(componentReducer));
             }
 
             private readonly getMemoizeProps = getMemoizePropsBuilder();
