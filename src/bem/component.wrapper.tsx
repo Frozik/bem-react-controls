@@ -6,7 +6,10 @@ import { ComponentName } from "./component-name";
 import { compose } from "./compose";
 import { ComponentNameContext, IClassNameProps, IDispatchProps } from "./contracts";
 import { Enhancer } from "./enhancer";
-import { buildExternalStorageEnhancer, buildInternalStorageEnhancer } from "./wrappers.builders";
+import { buildExternalStorageEnhancer } from "./external-storage-enhancer";
+import { buildInternalStorageEnhancer } from "./internal-storage-enhancer";
+import { buildStore } from "./redux.configuration";
+import { mergePropsReducer } from "./reducers";
 
 export function wrapToStatefulComponent<T extends IClassNameProps>(
     componentName: ComponentName,
@@ -20,9 +23,13 @@ export function wrapToStatefulComponent<T extends IClassNameProps>(
 
                 const { useGlobalStore = false } = props;
 
-                this.baseComponent = useGlobalStore
-                    ? buildExternalStorageEnhancer()(NestedWrappedComponent)
-                    : buildInternalStorageEnhancer(componentReducer)(NestedWrappedComponent);
+                if (useGlobalStore) {
+                    this.baseComponent = buildExternalStorageEnhancer()(NestedWrappedComponent);
+                } else {
+                    const store = buildStore(mergePropsReducer(componentReducer));
+
+                    this.baseComponent =  buildInternalStorageEnhancer(store)(NestedWrappedComponent);
+                }
             }
 
             private readonly baseComponent: ComponentType<IDispatchProps>;

@@ -1,5 +1,5 @@
 import classnames from "classnames";
-import React, { ComponentType, PureComponent } from "react";
+import React, { ComponentType, memo, PureComponent } from "react";
 
 import { ComponentName } from "./component-name";
 import { ComponentNameContext, IClassNameProps } from "./contracts";
@@ -68,8 +68,13 @@ export function buildConditionalEnhancer<P extends IClassNameProps>(
                 this._omitKeys = this._keys.filter((key) => !this._modifiers[key].keepInProps);
                 this._classNameKeys = this._keys.filter((key) => this._modifiers[key].useForClassName);
 
-                this._enhancedComponent = enhancer(this.cleanPropsComponent);
+                const safePropertiesComponent = memo((props: P) => (
+                    <ComponentNameContext.Consumer>
+                        { (componentName) => React.createElement(Component, this.buildSubProps(componentName, props)) }
+                    </ComponentNameContext.Consumer>
+                ));
 
+                this._enhancedComponent = enhancer(safePropertiesComponent);
             }
 
             static contextType = ComponentNameContext;
@@ -90,7 +95,7 @@ export function buildConditionalEnhancer<P extends IClassNameProps>(
                 });
             }
 
-            private buildSubProps(componentName: ComponentName, props: P) {
+            private buildSubProps(componentName: ComponentName, props: P): P {
                 const subProps = {} as P;
 
                 for (const key in props) {
@@ -118,15 +123,6 @@ export function buildConditionalEnhancer<P extends IClassNameProps>(
 
                 return componentName(modifierClassNames).toString();
             }
-
-            private cleanPropsComponent = (props: P) => (
-                <ComponentNameContext.Consumer>
-                    { (componentName) => React.createElement(
-                        Component,
-                        this.buildSubProps(componentName, props),
-                    ) }
-                </ComponentNameContext.Consumer>
-            )
 
             render() {
                 return this.shouldWrapInEnhancer()
