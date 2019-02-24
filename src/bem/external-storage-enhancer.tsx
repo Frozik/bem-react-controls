@@ -2,9 +2,9 @@ import React, { ComponentType, PureComponent } from "react";
 import { ReactReduxContext } from "react-redux";
 import { Action, AnyAction, Dispatch } from "redux";
 
-import { configureDispatch } from "./redux.configuration";
 import { DispatchContext, IDispatchProps } from "./contracts";
 import { Enhancer } from "./enhancer";
+import { configureDispatch } from "./redux.configuration";
 
 function getDisplayName(WrappedComponent: any) {
     return WrappedComponent.displayName || WrappedComponent.name || "Component";

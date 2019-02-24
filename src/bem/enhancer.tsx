@@ -39,89 +39,87 @@ function isActionModifier(modifier: any): modifier is ActionModifier {
 }
 
 export function buildConditionalEnhancer<P extends IClassNameProps>(
-    enhancer: Enhancer<P>,
-    modifiers?: Modifiers<P>,
+    modifiers: Modifiers<P>,
+    enhancer?: Enhancer<P>,
 ): Enhancer<P> {
+    const keys = modifiers ? Object.keys(modifiers) as Array<keyof P> : [];
+
+    const fullModifiers = keys.reduce(
+        (buildModifiers, key) => {
+            const modifierValue = (modifiers as Modifiers<P>)[key];
+
+            buildModifiers[key] = Object.assign(
+                { useForClassName: true, keepInProps: false },
+                isActionModifier(modifierValue)
+                    ? modifierValue
+                    : { match: modifierValue as OmitModifier },
+            );
+
+            return buildModifiers;
+        },
+        {} as FullModifiers<P>,
+    );
+
+    const omitKeys = keys.filter((key) => !fullModifiers[key].keepInProps);
+    const classNameKeys = keys.filter((key) => fullModifiers[key].useForClassName);
+
+    function buildClassNames(componentName: ComponentName, props: P): string {
+        const modifierClassNames = classNameKeys.reduce(
+            (classModifier, key) => {
+                classModifier[key] = props[key];
+
+                return classModifier;
+            },
+            {} as ClassModifiers<P>,
+        );
+
+        return componentName(modifierClassNames).toString();
+    }
+
+    function buildSubProps(componentName: ComponentName, props: P): P {
+        const subProps = {} as P;
+
+        for (const key in props) {
+            if (!props.hasOwnProperty(key) || omitKeys.indexOf(key) >= 0) {
+                continue;
+            }
+
+            subProps[key] = props[key];
+        }
+
+        subProps.className = classnames(props.className, buildClassNames(componentName, props));
+
+        return subProps;
+    }
+
     return (Component: ComponentType<any>) => (
         class extends PureComponent<P> {
             constructor(props: P) {
                 super(props);
 
-                this._keys = modifiers ? Object.keys(modifiers) as Array<keyof P> : [];
-
-                this._modifiers = this._keys.reduce(
-                    (buildModifiers, key) => {
-                        const modifierValue = (modifiers as Modifiers<P>)[key];
-
-                        buildModifiers[key] = Object.assign(
-                            { useForClassName: true, keepInProps: false },
-                            isActionModifier(modifierValue)
-                                ? modifierValue
-                                : { match: modifierValue as OmitModifier },
-                        );
-
-                        return buildModifiers;
-                    },
-                    {} as FullModifiers<P>,
+                const safePropertiesComponent = (props: P) => (
+                    <ComponentNameContext.Consumer>
+                        { (componentName) => React.createElement(Component, buildSubProps(componentName, props)) }
+                    </ComponentNameContext.Consumer>
                 );
 
-                this._omitKeys = this._keys.filter((key) => !this._modifiers[key].keepInProps);
-                this._classNameKeys = this._keys.filter((key) => this._modifiers[key].useForClassName);
-
-                const safePropertiesComponent = memo((props: P) => (
-                    <ComponentNameContext.Consumer>
-                        { (componentName) => React.createElement(Component, this.buildSubProps(componentName, props)) }
-                    </ComponentNameContext.Consumer>
-                ));
-
-                this._enhancedComponent = enhancer(safePropertiesComponent);
+                this._enhancedComponent = enhancer
+                    ? enhancer(memo(safePropertiesComponent))
+                    : safePropertiesComponent;
             }
 
             static contextType = ComponentNameContext;
 
-            private readonly _keys: Array<keyof P>;
-            private readonly _omitKeys: Array<keyof P>;
-            private readonly _classNameKeys: Array<keyof P>;
             private readonly _enhancedComponent: ComponentType<P>;
-            private readonly _modifiers: FullModifiers<P>;
 
             private shouldWrapInEnhancer() {
-                return this._keys.every((key) => {
-                    const modifierValue = this._modifiers[key].match;
+                return keys.every((key) => {
+                    const modifierValue = fullModifiers[key].match;
 
                     return modifierValue === SkipMatch ||
                         (modifierValue === MatchAny && key in this.props) ||
                         modifierValue === this.props[key];
                 });
-            }
-
-            private buildSubProps(componentName: ComponentName, props: P): P {
-                const subProps = {} as P;
-
-                for (const key in props) {
-                    if (!props.hasOwnProperty(key) || this._omitKeys.indexOf(key) >= 0) {
-                        continue;
-                    }
-
-                    subProps[key] = props[key];
-                }
-
-                subProps.className = classnames(props.className, this.buildClassNames(componentName));
-
-                return subProps;
-            }
-
-            private buildClassNames(componentName: ComponentName): string {
-                const modifierClassNames = this._classNameKeys.reduce(
-                    (classModifier, key) => {
-                        classModifier[key] = this.props[key];
-
-                        return classModifier;
-                    },
-                    {} as ClassModifiers<P>,
-                );
-
-                return componentName(modifierClassNames).toString();
             }
 
             render() {

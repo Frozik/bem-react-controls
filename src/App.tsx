@@ -50,7 +50,7 @@ class App extends Component<any, any> {
                 />
               </div>
               <div>
-                <Input />
+                <Input empty-body="blah" />
                 <Input focused={this.state.focused2} onFocusChanged={this.onFocusChanged2}
                       value={this.state.value2} onValueChanged={this.onValueChanged2}
                 />

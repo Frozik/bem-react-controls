@@ -1,9 +1,9 @@
 import React, { ComponentType, PureComponent } from "react";
 import { Store, Unsubscribe } from "redux";
 
+import { Actions } from "./actions";
 import { DispatchContext, IDispatchProps } from "./contracts";
 import { Enhancer } from "./enhancer";
-import { Actions } from "./actions";
 
 interface ISplitUpdates {
     stateDiff?: IDispatchProps;

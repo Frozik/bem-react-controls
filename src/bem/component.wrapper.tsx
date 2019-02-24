@@ -8,8 +8,8 @@ import { ComponentNameContext, IClassNameProps, IDispatchProps } from "./contrac
 import { Enhancer } from "./enhancer";
 import { buildExternalStorageEnhancer } from "./external-storage-enhancer";
 import { buildInternalStorageEnhancer } from "./internal-storage-enhancer";
-import { buildStore } from "./redux.configuration";
 import { mergePropsReducer } from "./reducers";
+import { buildStore } from "./redux.configuration";
 
 export function wrapToStatefulComponent<T extends IClassNameProps>(
     componentName: ComponentName,

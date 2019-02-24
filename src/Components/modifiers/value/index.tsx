@@ -1,7 +1,6 @@
 import React, { ComponentType, EventHandler, PureComponent, SyntheticEvent } from "react";
 import { Dispatch } from "redux";
 
-import { ComponentName } from "../../../bem/component-name";
 import { DispatchContext, IClassNameProps } from "../../../bem/contracts";
 import { buildConditionalEnhancer, Enhancer, RemoveModifier } from "../../../bem/enhancer";
 import { propagateDomEvent } from "../../modifier.helper";
@@ -53,9 +52,9 @@ const valueEnhancer: Enhancer<IValueProps> = (WrappedEntity: ComponentType<any>)
     }
 );
 
-export const valueModifier = buildConditionalEnhancer(
-    valueEnhancer,
+export const valueModifier = buildConditionalEnhancer<IValueProps>(
     {
         onValueChanged: RemoveModifier,
     },
+    valueEnhancer,
 );

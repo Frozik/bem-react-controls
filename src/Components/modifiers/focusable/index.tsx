@@ -1,7 +1,6 @@
 import React, { ComponentType, EventHandler, PureComponent, SyntheticEvent } from "react";
 import { Dispatch } from "redux";
 
-import { ComponentName } from "../../../bem/component-name";
 import { DispatchContext, IClassNameProps } from "../../../bem/contracts";
 import {
     buildConditionalEnhancer, Enhancer, RemoveModifier, SkipMatch
@@ -70,10 +69,10 @@ const focusableEnhancer: Enhancer<IFocusableProps> = (WrappedEntity: ComponentTy
     }
 );
 
-export const focusableModifier = buildConditionalEnhancer(
-    focusableEnhancer,
+export const focusableModifier = buildConditionalEnhancer<IFocusableProps>(
     {
         focused: SkipMatch,
         onFocusChanged: RemoveModifier,
     },
+    focusableEnhancer,
 );
