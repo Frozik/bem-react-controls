@@ -30,6 +30,11 @@ class App extends Component<any, any> {
         }
     }
 
+    private readonly onFocusChanged1 = (focused: boolean) => this.setState({ focused });
+    private readonly onFocusChanged2 = (focused: boolean) => this.setState({ focused2: focused });
+    private readonly onValueChanged1 = (value: string) => this.setState({ value });
+    private readonly onValueChanged2 = (value: string) => this.setState({ value2: value });
+
     render() {
       const { firstInput } = store.getState();
 
@@ -40,14 +45,14 @@ class App extends Component<any, any> {
               <h1>Without redux store</h1>
               <div>
                 <Input />
-                <Input focused={this.state.focused} onFocusChanged={(focused) => this.setState({ focused })}
-                      value={this.state.value} onValueChanged={(value) => this.setState({ value })}
+                <Input focused={this.state.focused} onFocusChanged={this.onFocusChanged1}
+                      value={this.state.value} onValueChanged={this.onValueChanged1}
                 />
               </div>
               <div>
                 <Input />
-                <Input focused={this.state.focused2} onFocusChanged={(focused) => this.setState({ focused2: focused })}
-                      value={this.state.value2} onValueChanged={(value) => this.setState({ value2: value })}
+                <Input focused={this.state.focused2} onFocusChanged={this.onFocusChanged2}
+                      value={this.state.value2} onValueChanged={this.onValueChanged2}
                 />
               </div>
             </article>

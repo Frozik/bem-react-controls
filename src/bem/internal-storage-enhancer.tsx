@@ -29,12 +29,12 @@ function splitUpdates(
                 } else {
                     accumulator.stateDiff[key] = newValue;
                 }
+            }
+
+            if (!accumulator.propsDiff) {
+                accumulator.propsDiff = { [key]: newValue };
             } else {
-                if (!accumulator.propsDiff) {
-                    accumulator.propsDiff = { [key]: newValue };
-                } else {
-                    accumulator.propsDiff[key] = newValue;
-                }
+                accumulator.propsDiff[key] = newValue;
             }
 
             return accumulator;
@@ -58,14 +58,6 @@ export const buildInternalStorageEnhancer = (store: Store): Enhancer<IDispatchPr
         );
 
         return class extends PureComponent<IDispatchProps, IDispatchProps> {
-            constructor(props: IDispatchProps) {
-                super(props);
-
-                const { stateDiff, propsDiff } = splitUpdates(props, {}, storeKeys);
-
-                this.state = { ...stateDiff, ...propsDiff };
-            }
-
             private unsubscribeStoreChanges?: Unsubscribe;
 
             state = store.getState() as IDispatchProps;
