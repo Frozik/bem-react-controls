@@ -15,7 +15,7 @@ class App extends Component<any, any> {
     constructor(props: any) {
         super(props);
 
-        this.state = { focused: false, value: "" };
+        this.state = { focused: false, value: "", focused2: false, value2: "123" };
     }
 
     private subscription: Unsubscribe | undefined;
@@ -42,6 +42,12 @@ class App extends Component<any, any> {
                 <Input />
                 <Input focused={this.state.focused} onFocusChanged={(focused) => this.setState({ focused })}
                       value={this.state.value} onValueChanged={(value) => this.setState({ value })}
+                />
+              </div>
+              <div>
+                <Input />
+                <Input focused={this.state.focused2} onFocusChanged={(focused) => this.setState({ focused2: focused })}
+                      value={this.state.value2} onValueChanged={(value) => this.setState({ value2: value })}
                 />
               </div>
             </article>

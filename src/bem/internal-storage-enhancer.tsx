@@ -48,7 +48,7 @@ function splitUpdates(
 
 export const buildInternalStorageEnhancer = (store: Store): Enhancer<IDispatchProps> =>
     (NestedWrappedComponent: ComponentType<IDispatchProps>) => {
-        const _storeKeys = Object.keys(store.getState()).reduce(
+        const storeKeys = Object.keys(store.getState()).reduce(
             (accumulator, key) => {
                 accumulator[key] = true;
 
@@ -58,6 +58,14 @@ export const buildInternalStorageEnhancer = (store: Store): Enhancer<IDispatchPr
         );
 
         return class extends PureComponent<IDispatchProps, IDispatchProps> {
+            constructor(props: IDispatchProps) {
+                super(props);
+
+                const { stateDiff, propsDiff } = splitUpdates(props, {}, storeKeys);
+
+                this.state = { ...stateDiff, ...propsDiff };
+            }
+
             private unsubscribeStoreChanges?: Unsubscribe;
 
             state = store.getState() as IDispatchProps;
@@ -68,7 +76,7 @@ export const buildInternalStorageEnhancer = (store: Store): Enhancer<IDispatchPr
             }
 
             static getDerivedStateFromProps(props: IDispatchProps, state: IDispatchProps): Partial<IDispatchProps> | null {
-                const { stateDiff, propsDiff } = splitUpdates(props, state, _storeKeys);
+                const { stateDiff, propsDiff } = splitUpdates(props, state, storeKeys);
 
                 if (stateDiff) {
                     store.dispatch(Actions.merge(stateDiff));

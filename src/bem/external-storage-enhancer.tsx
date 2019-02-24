@@ -12,10 +12,8 @@ function getDisplayName(WrappedComponent: any) {
 
 export const buildExternalStorageEnhancer = (): Enhancer<IDispatchProps> =>
     (NestedWrappedComponent: ComponentType<any>) => (
-        class ExternalStorageComponent extends PureComponent<IDispatchProps, { dispatch: Dispatch }> {
+        class extends PureComponent<IDispatchProps, { dispatch: Dispatch }> {
             static contextType = ReactReduxContext;
-
-            state = { dispatch: <T extends Action = AnyAction>(action: T) => action };
 
             componentDidMount() {
                 if (!this.context) {
@@ -30,7 +28,12 @@ export const buildExternalStorageEnhancer = (): Enhancer<IDispatchProps> =>
             }
 
             render() {
+                if (!this.state) {
+                    return null;
+                }
+
                 const { dispatch } = this.state;
+
                 const { cid, useGlobalStore, ...props } = this.props;
 
                 return (

@@ -15,7 +15,7 @@
     "classnames": "^2.2.6",
     "memoize-one": "^5.0.0",
     "node-sass": "^4.11.0",
-    "react": "^16.7.0",
+    "react": "^16.8.3",
     "react-dom": "^16.7.0",
     "react-redux": "^6.0.0",
     "react-scripts": "2.1.3",
