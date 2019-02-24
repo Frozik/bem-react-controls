@@ -5,18 +5,59 @@ import { DispatchContext, IDispatchProps } from "./contracts";
 import { Enhancer } from "./enhancer";
 import { Actions } from "./actions";
 
+interface ISplitUpdates {
+    stateDiff?: IDispatchProps;
+    propsDiff: IDispatchProps | null;
+}
+
+function splitUpdates(
+    props: IDispatchProps,
+    state: IDispatchProps,
+    storeKeys: { [key: string]: boolean },
+): ISplitUpdates {
+    return (Object.keys(props) as Array<keyof IDispatchProps>).reduce(
+        (accumulator, key) => {
+            const newValue = props[key];
+
+            if (state[key] === newValue) {
+                return accumulator;
+            }
+
+            if (storeKeys[key]) {
+                if (!accumulator.stateDiff) {
+                    accumulator.stateDiff = { [key]: newValue };
+                } else {
+                    accumulator.stateDiff[key] = newValue;
+                }
+            } else {
+                if (!accumulator.propsDiff) {
+                    accumulator.propsDiff = { [key]: newValue };
+                } else {
+                    accumulator.propsDiff[key] = newValue;
+                }
+            }
+
+            return accumulator;
+        },
+        {
+            stateDiff: undefined,
+            propsDiff: null,
+        } as ISplitUpdates,
+    );
+}
+
 export const buildInternalStorageEnhancer = (store: Store): Enhancer<IDispatchProps> =>
-    (NestedWrappedComponent: ComponentType<IDispatchProps>) => (
-        class InternalStorageComponent extends PureComponent<IDispatchProps, IDispatchProps> {
-            private static readonly StoreKeys = Object.keys(store.getState()).reduce(
-                (accumulator, key) => {
-                    accumulator[key] = true;
+    (NestedWrappedComponent: ComponentType<IDispatchProps>) => {
+        const _storeKeys = Object.keys(store.getState()).reduce(
+            (accumulator, key) => {
+                accumulator[key] = true;
 
-                    return accumulator;
-                },
-                {} as { [key: string]: boolean },
-            );
+                return accumulator;
+            },
+            {} as { [key: string]: boolean },
+        );
 
+        return class extends PureComponent<IDispatchProps, IDispatchProps> {
             private unsubscribeStoreChanges?: Unsubscribe;
 
             state = store.getState() as IDispatchProps;
@@ -27,42 +68,13 @@ export const buildInternalStorageEnhancer = (store: Store): Enhancer<IDispatchPr
             }
 
             static getDerivedStateFromProps(props: IDispatchProps, state: IDispatchProps): Partial<IDispatchProps> | null {
-                const diff = (Object.keys(props) as Array<keyof IDispatchProps>).reduce(
-                    (accumulator, key) => {
-                        const newValue = props[key];
+                const { stateDiff, propsDiff } = splitUpdates(props, state, _storeKeys);
 
-                        if (state[key] === newValue) {
-                            return accumulator;
-                        }
-
-
-                        if (InternalStorageComponent.StoreKeys[key]) {
-                            if (!accumulator.stateDiff) {
-                                accumulator.stateDiff = { [key]: newValue };
-                            } else {
-                                accumulator.stateDiff[key] = newValue;
-                            }
-                        } else {
-                            if (!accumulator.propsDiff) {
-                                accumulator.propsDiff = { [key]: newValue };
-                            } else {
-                                accumulator.propsDiff[key] = newValue;
-                            }
-                        }
-
-                        return accumulator;
-                    },
-                    {
-                        stateDiff: undefined,
-                        propsDiff: null,
-                    } as { stateDiff?: IDispatchProps, propsDiff: IDispatchProps | null },
-                );
-
-                if (diff.stateDiff) {
-                    store.dispatch(Actions.merge(diff.stateDiff));
+                if (stateDiff) {
+                    store.dispatch(Actions.merge(stateDiff));
                 }
 
-                return diff.propsDiff;
+                return propsDiff;
             }
 
             componentWillUnmount() {
@@ -78,5 +90,5 @@ export const buildInternalStorageEnhancer = (store: Store): Enhancer<IDispatchPr
                     </DispatchContext.Provider>
                 );
             }
-        }
-    );
+        };
+    };

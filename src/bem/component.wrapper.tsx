@@ -28,7 +28,7 @@ export function wrapToStatefulComponent<T extends IClassNameProps>(
                 } else {
                     const store = buildStore(mergePropsReducer(componentReducer));
 
-                    this.baseComponent =  buildInternalStorageEnhancer(store)(NestedWrappedComponent);
+                    this.baseComponent = buildInternalStorageEnhancer(store)(NestedWrappedComponent);
                 }
             }
 
